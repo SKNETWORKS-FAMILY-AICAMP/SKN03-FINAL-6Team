@@ -1,4 +1,0 @@
-rootProject.name = 'SKN03-FINAL-6TEAM'
-
-include ':TailorLink_Back'
-project(':TailorLink_Back').projectDir = file('TailorLink_Back')
