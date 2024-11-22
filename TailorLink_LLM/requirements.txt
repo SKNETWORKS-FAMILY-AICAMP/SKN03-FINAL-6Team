@@ -2,7 +2,11 @@ boto3 # aws
 fastapi # web
 uvicorn
 openai # chatGPT
-
+pydantic
+langchain
+azure-search-documents
+azure-core
+python-dotenv
 
 
 

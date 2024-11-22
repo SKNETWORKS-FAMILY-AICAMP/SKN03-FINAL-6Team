@@ -1,11 +1,10 @@
 from fastapi import FastAPI
+from routers import recommend
 
-app = FastAPI()
+app = FastAPI(
+    title="차량 추천 엔진",
+    description="사용자의 선호도에 맞는 차량을 추천합니다.",
+    version="1.0.0"
+)
 
-@app.get("")
-def read_root():
-    return {"message": "Hello, World!"}
-
-@app.get("/_stcore/health")
-def health_check():
-    return {"status": "healthy"}
+app.include_router(recommend.router)
