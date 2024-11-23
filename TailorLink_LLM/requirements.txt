@@ -4,9 +4,11 @@ uvicorn
 openai # chatGPT
 pydantic
 langchain
-azure-search-documents
-azure-core
-python-dotenv
+transformers
+torch
+pandas
+numpy
+scikit-learn
 
 
 
