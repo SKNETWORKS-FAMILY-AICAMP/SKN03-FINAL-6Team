@@ -125,3 +125,21 @@ fna_prompt = PromptTemplate.from_template(
 """
     
 )
+
+retriever_prompt = PromptTemplate.from_template(
+"""
+    You are a highly intelligent assistant with access to retrieved information from a database. 
+    Below are relevant pieces of information retrieved from the database based on a user query:
+
+    {retrieved_documents}
+
+    The user has the following question:
+    {user_query}
+
+    Using the information above, provide a concise and accurate response to the user's question. 
+    If the retrieved information is insufficient, indicate that additional information is needed.
+    Avoid guessing or making unsupported claims.
+
+"""
+    
+)
