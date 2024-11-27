@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from apps.routers import chatbot
 
 app = FastAPI(
-    title="Car Recommendation Chatbot API",
-    description="A chatbot API for recommending cars using OpenAI.",
+    title="차량 추천 전문 채팅 봇",
+    description="OpenAI를 사용한 채팅 봇",
     version="1.0.0",
 )
 
@@ -12,5 +12,4 @@ app.include_router(chatbot.router, prefix="/api", tags=["Chatbot"])
 
 @app.get("/")
 async def root():
-    return {"message": "당신이 구매하고자 하는 차량, 추천해드리겠습니다."}
-
+    return {"message": "Car Recommendation Chatbot API is running."}

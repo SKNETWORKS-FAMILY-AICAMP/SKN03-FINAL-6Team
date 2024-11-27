@@ -1,18 +1,18 @@
-# app/utils.py
 import os
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from typing import List, Dict
 
+# 환경 변수 로드
 load_dotenv()
 
 def langchain_param():
-        params = {
-            "temperature": 0.9,  # 더 자연스러운 응답 생성
-            "max_tokens": 500,  # 응답 크기 제한
-            "frequency_penalty": 0.2,
-            "presence_penalty": 0.6
-        }
-        return params
+    return {
+        "temperature": 0.9,
+        "max_tokens": 500,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.6,
+    }
 
 class OpenAIClientSingleton:
     _instance = None
@@ -26,11 +26,9 @@ class OpenAIClientSingleton:
             )
         return cls._instance
 
-def get_openai_response(user_input: str) -> str:
+def get_openai_response(messages: List[Dict[str, str]]) -> str:
     client = OpenAIClientSingleton.get_instance()
-    messages = [
-        {"role": "system", "content": "당신은 자동차 추천을 도와주는 친절한 어시스턴트입니다."},
-        {"role": "user", "content": user_input}
-    ]
+
+    # OpenAI 호출 및 응답 생성
     response = client.invoke(messages)
     return response.content
