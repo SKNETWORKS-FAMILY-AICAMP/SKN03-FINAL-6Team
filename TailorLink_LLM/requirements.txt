@@ -1,7 +1,7 @@
-boto3 # aws 
-fastapi # web
+boto3  
+fastapi 
 uvicorn
-openai # chatGPT
+openai 
 pydantic
 langchain
 transformers
