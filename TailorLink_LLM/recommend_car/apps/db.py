@@ -27,3 +27,11 @@ class CarModel(Base):
 
 def get_car_model_by_id(db: Session, model_id: int):
     return db.query(CarModel).filter(CarModel.model_id == model_id).first()
+
+def get_car_info_from_db(db: Session, query: str):
+    # 간단하게 차량 이름이 쿼리에 포함되는지로 검색
+    car_models = db.query(CarModel).all()
+    for car_model in car_models:
+        if car_model.name in query:
+            return car_model
+    return None
