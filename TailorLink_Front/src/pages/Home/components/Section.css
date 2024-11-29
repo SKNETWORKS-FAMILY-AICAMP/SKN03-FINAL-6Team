@@ -1,0 +1,31 @@
+.section {
+    opacity: 0; /* 초기에는 완전히 투명 */
+    transform: translateY(50px); /* 아래에서 위로 올라오는 효과 */
+    transition: all 0.8s ease-in-out; /* 애니메이션 */
+  }
+  
+  .section.visible {
+    opacity: 1; /* 화면에 나타남 */
+    transform: translateY(0); /* 원래 위치 */
+  }
+  
+  .cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .card:hover {
+    transform: scale(1.05); /* 호버 시 크기 증가 */
+  }
