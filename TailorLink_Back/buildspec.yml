@@ -3,8 +3,8 @@ env:
   git-credential-helper: 'yes'
   variables:
     # docker 파라미터 정의
-    ECS_CONTAINER_NAME: tailor-springboot-container
-    IMAGE_REPO_NAME: tailor-springboot-ecr # aws ecr에 등록이 되어 있는 name
+    ECS_CONTAINER_NAME: tailorlink-springboot-container
+    IMAGE_REPO_NAME: tailorlink-springboot-ecr # aws ecr에 등록이 되어 있는 name
     IMAGE_TAG: latest
     AWS_DEFAULT_REGION: ap-northeast-2
 
