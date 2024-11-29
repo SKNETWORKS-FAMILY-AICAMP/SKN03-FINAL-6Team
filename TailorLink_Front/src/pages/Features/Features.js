@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import "./Features.css";
 
 // 이미지 가져오기
-import carRecommendation from "../../assets/images/피카츄.png";
-import carManual from "../../assets/images/라이츄.png";
-import insurance from "../../assets/images/파이리.png";
-import estimate from "../../assets/images/꼬부기.png";
+import carRecommendation from "../../assets/images/P.png";
+import carManual from "../../assets/images/R.png";
+import insurance from "../../assets/images/Pi.png";
+import estimate from "../../assets/images/G.png";
 
 const Features = () => {
   const [activeChatbot, setActiveChatbot] = useState(null);
