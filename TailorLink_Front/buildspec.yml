@@ -20,6 +20,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
+      - cd ./TailorLink_Front
       - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI
