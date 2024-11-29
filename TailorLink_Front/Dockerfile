@@ -14,7 +14,7 @@ ENV ESLINT_NO_DEV_ERRORS=true
 COPY . .
 
 # 빌드
-RUN pnpm run dev
+RUN pnpm run build
 
 EXPOSE 3000
 
