@@ -3,6 +3,7 @@ FROM node:18
 WORKDIR /app
 
 COPY package*.json ./
+COPY pnpm*.yaml ./
 RUN npm install -g pnpm
 
 # 환경 변수 설정
