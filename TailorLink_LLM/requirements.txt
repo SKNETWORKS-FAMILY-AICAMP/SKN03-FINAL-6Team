@@ -1,0 +1,9 @@
+boto3 # aws 
+fastapi # web
+uvicorn
+openai # chatGPT
+
+
+
+
+

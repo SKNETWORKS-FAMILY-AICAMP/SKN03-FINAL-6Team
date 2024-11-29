@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -28,3 +29,15 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+=======
+.venv
+.env
+
+__pycache__
+
+
+finalproject-442107-b3e99388ce58.json
+.DS_Store
+
+node_modules
+>>>>>>> d3beff2b8b9471a4adc9c63c375d685cb1846103
