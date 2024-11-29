@@ -4,6 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 RUN npm install -g pnpm
+RUN pnpm install
 
 # 환경 변수 설정
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -14,7 +15,7 @@ ENV ESLINT_NO_DEV_ERRORS=true
 COPY . .
 
 # 빌드
-RUN pnpm run dev
+RUN pnpm run build
 
 EXPOSE 3000
 
