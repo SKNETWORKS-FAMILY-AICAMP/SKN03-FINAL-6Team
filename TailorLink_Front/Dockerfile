@@ -3,7 +3,7 @@ FROM node:18
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN pnpm install
+RUN npm install -g pnpm
 
 # 환경 변수 설정
 ENV NEXT_TELEMETRY_DISABLED=1
