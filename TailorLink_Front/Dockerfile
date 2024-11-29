@@ -2,10 +2,11 @@ FROM node:18
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY pnpm*.yaml ./
+COPY package*.json pnpm-lock.yaml ./
+
 RUN npm install -g pnpm
 
+RUN pnpm install --frozen-lockfile
 # 환경 변수 설정
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
