@@ -4,6 +4,8 @@ import com.example.FinalPJ.board.controller.entity.Board;
 import com.example.FinalPJ.board.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.FinalPJ.board.dto.BoardDTO;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
 import java.util.List;
