@@ -1,0 +1,110 @@
+.header {
+  background-color: #ffffff;
+  padding: 10px 0;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  position: fixed; /* 고정 */
+  top: 0;
+  width: 100%; /* 전체 너비 */
+  z-index: 1000; /* 화면 위로 올라오게 */
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo img {
+  height: 35px;
+  margin-left: -70px;
+}
+
+.nav {
+  position: relative;
+}
+
+.nav-list {
+  display: flex;
+  gap: 30px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.nav-link {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  text-decoration: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #0066ff;
+}
+
+.nav-link.active {
+  color: #0066ff; /* 활성화된 링크만 파란색 */
+}
+
+.dropdown {
+  position: absolute;
+  top: 120%;
+  background-color: #ffffff;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  list-style: none;
+  padding: 10px 0;
+  z-index: 1000;
+}
+
+.dropdown li {
+  padding: 5px 20px;
+}
+
+.dropdown-link {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #333;
+  display: block;
+}
+
+.dropdown-link:hover {
+  color: #0066ff;
+}
+
+.dropdown-link.active {
+  color: #0066ff; /* 활성화된 드롭다운 링크만 파란색 */
+}
+
+.auth-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-right: -70px;
+}
+
+.auth-link {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #3F80F7; /* 기본 파란색 */
+  text-decoration: none;
+  padding: 5px 10px;
+  transition: color 0.3s ease;
+}
+
+.auth-link:hover {
+  color: #2c6acb;
+}
+
+.auth-link.active {
+  color: #0066ff; /* 활성화된 로그인/회원가입 링크만 파란색 */
+}
