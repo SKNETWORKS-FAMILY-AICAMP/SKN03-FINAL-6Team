@@ -1,6 +1,7 @@
 import random
 import time
 import hashlib
+import asyncio
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -15,7 +16,6 @@ from recommend_car.apps.utils import (
     update_faiss_with_external_data,
     embeddings
 )
-import asyncio
 
 router = APIRouter()
 
@@ -43,6 +43,7 @@ class ChatResponse(BaseModel):
     response: str = Field(...)
     session_id: str = Field(...)
     history: List[Message] = Field(...)
+    car_id: str = Field(...)
 
 # SHA256 해싱으로 고유한 세션 ID 생성
 def generate_session_id() -> str:
@@ -105,6 +106,7 @@ async def chat(chat_request: ChatRequest, db: Session = Depends(get_db)):
     else:
         # 비동기적으로 외부 데이터 업데이트
         asyncio.create_task(update_faiss_with_external_data(faiss_index, user_input, documents))
+
         # 현재 FAISS 인덱스에서 검색
         search_indices = search_faiss(faiss_index, user_input, k=3)
         search_results = get_documents_by_indices(documents, search_indices)
@@ -127,4 +129,4 @@ async def chat(chat_request: ChatRequest, db: Session = Depends(get_db)):
         response=ai_response,
         session_id=session_id,
         history=conversation_history
-    )
+    )   
