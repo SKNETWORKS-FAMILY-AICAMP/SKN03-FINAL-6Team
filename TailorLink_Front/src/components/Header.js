@@ -38,22 +38,12 @@ const TopNav = () => {
             </li>
             <li className="nav-item">
               <Link
-                to="/guide"
-                className={`nav-link ${isActive("/guide") ? "active" : ""}`}
-              >
-                가이드
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
                 to="/features"
                 className={`nav-link ${isActive("/features") ? "active" : ""}`}
               >
                 기능
               </Link>
             </li>
-
-            {/* 고객센터 드롭다운 */}
             <li
               className="nav-item"
               onMouseEnter={handleMouseEnter}
