@@ -28,8 +28,7 @@ phases:
   post_build:
     commands:
       - echo Packaging Source...
-      - echo Pushing the Docker image...
-      - docker push $REPOSITORY_URI
+      - echo "Skipping Docker commands as ECR is not used"
       - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_CONTAINER_NAME $REPOSITORY_URI > imagedefinitions.json
 
 artifacts:
