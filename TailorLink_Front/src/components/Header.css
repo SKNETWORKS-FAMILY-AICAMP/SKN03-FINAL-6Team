@@ -2,6 +2,10 @@
   background-color: #ffffff;
   padding: 10px 0;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  position: fixed; /* 고정 */
+  top: 0;
+  width: 100%; /* 전체 너비 */
+  z-index: 1000; /* 화면 위로 올라오게 */
 }
 
 .header-container {
