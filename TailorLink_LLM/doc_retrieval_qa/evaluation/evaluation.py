@@ -144,10 +144,6 @@ def get_BERTScore(reference, hypothesis, device=None):
     # BERTScore 계산
     P, R, F1 = score(hypothesis, reference, lang="ko", verbose=True, device=device)
 
-    print(f"Precision: {P.mean().item():.4f}")
-    print(f"Recall: {R.mean().item():.4f}")
-    print(f"F1 Score: {F1.mean().item():.4f}")
-
     return {"recall": R.mean().item(), "precision": P.mean().item(), "f1_score": F1.mean().item()}
 
 # GPTScore (Perplexity 기반 평가)
@@ -243,6 +239,22 @@ def evaluate_rag(reference, hypothesis, use_g_eval=False, use_gpu=False):
 
     # BERTScore
     results['BERTScore'] = get_BERTScore([reference], [hypothesis], device)
+
+    results['Precision'] = {"METEOR": results['METEOR']["precision"],
+                            "ROUGE-1": results['ROUGE-1']["precision"],
+                            "ROUGE-L": results['ROUGE-L']["precision"],
+                            "BERTScore": results['BERTScore']["precision"],
+                            }
+    results['Recall'] = {"METEOR": results['METEOR']["recall"],
+                            "ROUGE-1": results['ROUGE-1']["recall"],
+                            "ROUGE-L": results['ROUGE-L']["recall"],
+                            "BERTScore": results['BERTScore']["recall"],
+                            }
+    results['F1 Score'] = {"METEOR": results['METEOR']["f1_score"],
+                            "ROUGE-1": results['ROUGE-1']["f1_score"],
+                            "ROUGE-L": results['ROUGE-L']["f1_score"],
+                            "BERTScore": results['BERTScore']["f1_score"],
+                            }
 
     # 코사인 유사도
     results['Cosine Similarity'] = calculate_sentece_similarity_with_cosine_similarity(reference, hypothesis, device)
