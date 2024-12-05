@@ -7,6 +7,9 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
+# OpenAI 캐싱
+openai_cache = TTLCache(maxsize=100, ttl=600)
+
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
@@ -19,8 +22,6 @@ def langchain_param():
         "presence_penalty": 0.6,
     }
 
-# OpenAI 응답 캐싱 (10분 TTL)
-openai_cache = TTLCache(maxsize=100, ttl=600)
 
 class OpenAIClientSingleton:
     _instance = None
@@ -34,8 +35,7 @@ class OpenAIClientSingleton:
             )
         return cls._instance
 
-# OpenAI 응답 캐싱
-@cached(openai_cache, key=lambda messages: hashkey(tuple((msg['role'], msg['content']) for msg in messages)))
+@cached(openai_cache , key=lambda messages: hashkey(tuple((msg['role'], msg['content']) for msg in messages)))
 def get_openai_response(messages: List[Dict[str, str]]) -> str:
     client = OpenAIClientSingleton.get_instance()
     response = client.invoke(messages)

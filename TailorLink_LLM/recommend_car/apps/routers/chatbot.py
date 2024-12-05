@@ -11,7 +11,6 @@ from recommend_car.apps.prompt_manager import get_system_prompt
 
 router = APIRouter()
 
-
 # 로깅 설정
 logging.basicConfig(
     level=logging.DEBUG,  
@@ -37,12 +36,14 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None)
     user_input: str = Field(...)
 
+#프런트에 넘길 스키마 데이터
 class ChatResponse(BaseModel):
     response: str = Field(...)
     session_id: str = Field(...)
     history: List[Message] = Field(...)
-    car_ids: List[int] = Field(default=[])  # 차량 ID 목록 추가
+    car_ids: List[int] = Field(default=[])  
 
+#세션 아이디가 새로 요구될때 사용
 def generate_session_id() -> str:
     while True:
         random_number = random.randint(1000000000, 9999999999)

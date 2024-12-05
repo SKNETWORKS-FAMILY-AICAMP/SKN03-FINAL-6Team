@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger("recommend_car")
 
+#제네시스 크롤링
 def fetch_genesis_models():
     url = 'https://www.genesis.com/kr/ko/main.html'
     response = requests.get(url)
