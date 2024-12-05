@@ -1,17 +1,19 @@
+#################################
+# 테스트를 위한 test 파일(db연결)
+#################################
+
 import pymysql
 import os
 from dotenv import load_dotenv
 
-# .env 파일 로드
 load_dotenv()
 
-# 환경 변수에서 MySQL 연결 정보 가져오기
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = int(os.getenv("DB_PORT", 3306))
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
-DB_CHARSET = os.getenv("DB_CHARSET", "utf8mb4")  # 기본 문자셋 설정
+DB_CHARSET = os.getenv("DB_CHARSET", "utf8mb4") 
 
 def test_db_connection():
     connection = None
@@ -29,7 +31,7 @@ def test_db_connection():
 
         print("✅ MySQL에 성공적으로 연결되었습니다!")
 
-        # 커서 객체 생성 및 쿼리 실행
+        # 커서 객체 생성 및 쿼리 실행(쿼리 작성을 위해)
         with connection.cursor() as cursor:
             cursor.execute("SELECT DATABASE();")
             result = cursor.fetchone()
@@ -39,7 +41,6 @@ def test_db_connection():
         print("❌ MySQL 연결 중 오류 발생:", e)
 
     finally:
-        # 연결 종료
         if connection:
             connection.close()
             print("🔒 MySQL 연결이 종료되었습니다.")

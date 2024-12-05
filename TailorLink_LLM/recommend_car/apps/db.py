@@ -22,22 +22,3 @@ def get_connection():
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor
     )
-
-def get_car_info(query):
-    try:
-        connection = get_connection()
-        with connection.cursor() as cursor:
-            # 차량 정보 검색 쿼리
-            sql = """
-            SELECT model_id, name, description, image_url
-            FROM car_models
-            WHERE name LIKE %s OR description LIKE %s
-            """
-            cursor.execute(sql, (f"%{query}%", f"%{query}%"))
-            result = cursor.fetchall()
-            return result
-    except pymysql.MySQLError as e:
-        print("❌ 데이터베이스 오류:", e)
-    finally:
-        if connection:
-            connection.close()

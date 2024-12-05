@@ -29,7 +29,7 @@ class OpenAIClientSingleton:
     def get_instance(cls):
         if cls._instance is None:
             cls._instance = ChatOpenAI(
-                model_name="gpt-4",
+                model_name="gpt-4.0-mini",
                 **langchain_param()
             )
         return cls._instance
@@ -40,3 +40,4 @@ def get_openai_response(messages: List[Dict[str, str]]) -> str:
     client = OpenAIClientSingleton.get_instance()
     response = client.invoke(messages)
     return response.content
+

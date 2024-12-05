@@ -1,8 +1,10 @@
 import sys
 import os
 import logging
+import asyncio
 from fastapi import FastAPI
 from recommend_car.apps.routers import chatbot
+from recommend_car.apps.data_update_crawling import update_car_models
 sys.path.append(os.path.join(os.path.dirname(__file__), "recommend_car"))
 
 logging.basicConfig(
@@ -36,4 +38,19 @@ app.include_router(chatbot.router, prefix="/api", tags=["Chatbot"])
 @app.get("/")
 async def root():
     return {"message": "Car Recommendation Chatbot API is running."}
+
+
+# 주기적 작업 실행 함수
+async def periodic_update():
+    while True:
+        logger.info("자동 업데이트 진행 중")
+        # 비동기적으로 블로킹 함수 실행
+        await asyncio.to_thread(update_car_models)
+        await asyncio.sleep(60 * 60 * 24 * 7)  # 일주일(7일) 대기
+
+# 애플리케이션 시작 시 주기적 업데이트 작업 시작
+@app.on_event("startup")
+async def startup_event():
+    logger.info("업데이트 시작")
+    asyncio.create_task(periodic_update())
 
