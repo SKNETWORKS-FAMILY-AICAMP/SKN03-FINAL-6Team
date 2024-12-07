@@ -2,7 +2,6 @@ package com.example.FinalPJ.board.controller;
 
 import org.springframework.ui.Model;
 import com.example.FinalPJ.board.dto.BoardDTO; 
-import com.example.FinalPJ.board.controller.entity.Board;
 import com.example.FinalPJ.board.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,13 +25,15 @@ public class BoardController {
     }
 
     @PostMapping("board/writepro")
-    public ResponseEntity<?> boardWritePro(@Valid @RequestBody BoardDTO boardDTO, BindingResult bindingResult) {
+    public String boardWritePro(@Valid @RequestBody BoardDTO boardDTO, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
-            // Validation 에러 메시지 반환
-            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+            System.out.println("Validation Errors: " + bindingResult.getAllErrors());
+            model.addAttribute("errors", bindingResult.getAllErrors());
+            return "boardwrite";
         }
+        
         boardService.boardWrite(boardDTO);
-        return ResponseEntity.ok("Success");
+        return "redirect:/board/list";
     }
 
     @GetMapping("/board/list")
@@ -57,7 +57,7 @@ public class BoardController {
     @GetMapping("/board/modify/{board_id}")
     public String boardModify(@PathVariable("board_id") Integer board_id, Model model) {
         model.addAttribute("board", boardService.boardView(board_id));
-        return "boardmodify";
+        return "redirect:/board/modify/{board_id}";
     }
 
     @PostMapping("/board/update/{board_id}")

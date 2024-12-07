@@ -20,6 +20,9 @@ WORKDIR $APP_HOME
 # 빌드된 JAR 파일 복사
 COPY --from=build /apps/build/libs/SKN03-FINAL-6TEAM-0.0.1-SNAPSHOT.jar app.jar
 
+# 컨테이너 실행 유무 확인 
+HEALTHCHECK CMD curl http://localhost:8080/actuator/health
+
 # 애플리케이션 실행
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
