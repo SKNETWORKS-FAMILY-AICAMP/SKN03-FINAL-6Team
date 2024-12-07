@@ -1,11 +1,11 @@
+# recommend_car/apps/data_update_crawling.py
 import requests
 from bs4 import BeautifulSoup
-from .db import get_connection
+from .db import get_connection  # 기존 apps.db -> .db 로 수정
 import logging
 
 logger = logging.getLogger("recommend_car")
 
-#제네시스 크롤링
 def fetch_genesis_models():
     url = 'https://www.genesis.com/kr/ko/main.html'
     response = requests.get(url)

@@ -30,7 +30,7 @@ class OpenAIClientSingleton:
     def get_instance(cls):
         if cls._instance is None:
             cls._instance = ChatOpenAI(
-                model_name="gpt-4.0-mini",
+                model_name="gpt-4",
                 **langchain_param()
             )
         return cls._instance
