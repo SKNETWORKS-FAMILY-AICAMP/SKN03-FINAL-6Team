@@ -7,10 +7,12 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Table;
 
 
 @Entity
 @Data
+@Table(name = "board")
 public class Board {
 
     @Id
