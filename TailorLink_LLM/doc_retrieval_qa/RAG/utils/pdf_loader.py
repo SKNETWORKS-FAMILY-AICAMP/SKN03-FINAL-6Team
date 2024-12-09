@@ -1,14 +1,37 @@
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_core.documents import Document
 import pdfplumber
+from pdfplumber import open as open_pdf
 import json
+
+
+
+
+def load_pdf(file_path: str):
+    with open_pdf(file_path) as pdf:
+        text = ""
+        for page in pdf.pages:
+            text += page.extract_text() + "\n"
+    return text.strip()
+
+
+
+
+
+
+
+
+
+
+
+
 
 def LoadPDF(file_path:str):
     loader = PDFPlumberLoader(file_path)
     docs = loader.load()
     return docs
 
-def LoadPDF2(file_path: str):
+def load_pdf2(file_path: str):
     docs = []
     # PDFPlumber를 사용하여 파일을 로드합니다.
     with pdfplumber.open(file_path) as pdf:

@@ -9,4 +9,3 @@ def get_OpenAI(model_name="gpt-4o-mini"):
 
 def get_ollama(model_id:str):
     llm = ChatOllama(model=model_id, temperature=0)
-    return llm
