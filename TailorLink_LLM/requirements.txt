@@ -1,9 +1,18 @@
-boto3 # aws 
-fastapi # web
+boto3  
+fastapi 
 uvicorn
-openai # chatGPT
-
-
+openai 
+pydantic
+langchain
+transformers
+torch
+pandas
+numpy
+scikit-learn
+sentence-transformers
+langsmith
+python-dotenv
+pymysql
 
 
 

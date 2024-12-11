@@ -27,4 +27,4 @@ EXPOSE 8000
 # 컨테이너 실행 유무 확인 
 HEALTHCHECK CMD curl --fail http://localhost:8000/_stcore/health
 # 웹서버 실행 
-ENTRYPOINT ["uvicorn", "tailor_chatbot.tailorBot:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["uvicorn", "tailor_chatbot.main:app", "--host", "0.0.0.0", "--port", "8000"]
