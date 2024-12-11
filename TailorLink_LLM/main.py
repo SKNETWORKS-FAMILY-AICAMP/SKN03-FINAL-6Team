@@ -38,6 +38,10 @@ app.include_router(chatbot.car_recommend_router, prefix="/api", tags=["car_recom
 async def root():
     return {"message": "Car Recommendation Chatbot API is running."}
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 # 주기적 작업 실행 함수
 async def periodic_update():
     while True:
