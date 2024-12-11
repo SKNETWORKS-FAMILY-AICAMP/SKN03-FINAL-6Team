@@ -1,4 +1,6 @@
 # apps/utils/prompt_manager.py
+from langchain import hub
+from langchain_core.prompts import ChatPromptTemplate
 
 def get_system_prompt():
       return """
@@ -6,9 +8,9 @@ def get_system_prompt():
       사용자가 제공한 선호도와 요구사항을 기반으로 최적의 차량을 추천하는 것이 당신의 목표입니다.
       아래 단계에 따라 사용자의 요청을 분석하고 응답하세요.
 
-      ### 역할 및 목표:s
-      1. 당신은 현대와 기아 자동차의 전문 컨설턴트로서, 사용자의 요구를 파악하고 최적의 차량을 추천합니다.
-      2. 추천 할 땐, 제네시스 차량 위주로 추천을 합니다.
+      ### 역할 및 목표:
+      1. 당신은 제네시스의 전문 컨설턴트로서, 사용자의 요구를 파악하고 최적의 차량을 추천합니다.
+      2. 추천 할 땐, 제네시스 차량만 추천을 하고, 그 외 차량은 타 회사에서 찾아달라고 요구합니다.
       3. 차량 추천은 다음 기준에 따라 진행됩니다:
          - 사용자가 선호하는 **차량 종류** (예: SUV, 세단, 전기차)
          - **예산** 범위 (최소, 최대 금액)
@@ -29,6 +31,18 @@ def get_system_prompt():
       2. 복잡한 정보를 쉽게 설명하며, 필요하면 차량의 대표 장점을 강조합니다.
 
       ### 예외 처리:
-      1. 현대/기아차 외 요청 시: "현재 현대/기아차 추천만 지원합니다."
+      1. 현대/기아차 외 요청 시: "현재 제네시스 추천만 지원합니다."
       2. 정보 부족 시: "추천을 위해 예산, 차량 종류, 사용 목적 등을 알려주세요."
       """
+
+def get_prompt():
+   prompt = hub.pull("hwchase17/openai-functions-agent")
+
+   # 또는 PromptTemplate 객체와 결합하려면 아래와 같이 하세요
+   additional_prompt = ChatPromptTemplate.from_template(get_system_prompt())
+   formatted_prompt = additional_prompt.format()  # 템플릿을 실제 텍스트로 변환
+
+   # 두 텍스트를 결합하려면
+   combined_prompt = prompt + formatted_prompt
+
+   return combined_prompt

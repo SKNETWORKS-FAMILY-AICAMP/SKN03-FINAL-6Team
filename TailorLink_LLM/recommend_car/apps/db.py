@@ -1,29 +1,24 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import pymysql
+import os
+from dotenv import load_dotenv
 
-Base = declarative_base()
+# .env 파일 로드
+load_dotenv()
 
-# SQLite url 주소
-DATABASE_URL = "sqlite:///./test.db"
+# 환경 변수에서 데이터베이스 연결 정보 가져오기
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = int(os.getenv("DB_PORT", 3306))
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# DB 초기화
-Base.metadata.create_all(bind=engine)
-
-class CarModel(Base):
-    # 카 모델 이름 정해지면 이름 적기(임시)
-    __tablename__ = "car_models"
-
-    model_id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    image_url = Column(String, nullable=False)
-
-
-def get_car_model_by_id(db: Session, model_id: int):
-    return db.query(CarModel).filter(CarModel.model_id == model_id).first()
+def get_connection():
+    return pymysql.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor
+    )
