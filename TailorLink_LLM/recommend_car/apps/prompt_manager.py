@@ -1,4 +1,6 @@
 # apps/utils/prompt_manager.py
+from langchain import hub
+from langchain_core.prompts import ChatPromptTemplate
 
 def get_system_prompt():
       return """
@@ -32,3 +34,15 @@ def get_system_prompt():
       1. 현대/기아차 외 요청 시: "현재 제네시스 추천만 지원합니다."
       2. 정보 부족 시: "추천을 위해 예산, 차량 종류, 사용 목적 등을 알려주세요."
       """
+
+def get_prompt():
+   prompt = hub.pull("hwchase17/openai-functions-agent")
+
+   # 또는 PromptTemplate 객체와 결합하려면 아래와 같이 하세요
+   additional_prompt = ChatPromptTemplate.from_template(get_system_prompt())
+   formatted_prompt = additional_prompt.format()  # 템플릿을 실제 텍스트로 변환
+
+   # 두 텍스트를 결합하려면
+   combined_prompt = prompt + formatted_prompt
+
+   return combined_prompt

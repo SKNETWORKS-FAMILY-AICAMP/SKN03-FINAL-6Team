@@ -10,7 +10,9 @@ pandas
 numpy
 scikit-learn
 sentence-transformers
-
+langsmith
+python-dotenv
+pymysql
 
 
 

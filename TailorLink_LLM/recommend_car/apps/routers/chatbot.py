@@ -1,20 +1,18 @@
-# recommend_car/apps/routers/chatbot.py
 import random
 import time
 import hashlib
 import logging
-import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
-from ..db import get_connection
-from ..utils import get_openai_response
-from ..prompt_manager import get_system_prompt
-from ..data_update_crawling import update_car_models
-from ..retrieval import search_documents
+from ..utils import get_toolkit
+from ..prompt_manager import get_prompt
+from ..agent import create_agent, agent_excute, is_agent_finish
+from ..cilent import get_client
+from ..workflow import build_workflow
 
-router = APIRouter()
+car_recommend_router = APIRouter()
 
 logging.basicConfig(
     level=logging.DEBUG,  
@@ -40,8 +38,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str = Field(...)
     session_id: str = Field(...)
-    history: List[Message] = Field(...)
-    car_ids: List[int] = Field(default=[])
+    history: list[Message] = Field(...)
+    car_ids: list[int] = Field(default=[])
 
 def generate_session_id() -> str:
     while True:
@@ -69,86 +67,7 @@ def cleanup_sessions():
         logger.info(f"세션 {session_id} 만료로 삭제")
         del conversation_memory[session_id]
 
-ATTRIBUTE_KEYWORDS = {
-    '연비': ('car_detail_info', 'combined_fuel_efficiency'),
-    '배터리 타입': ('car_detail_info', 'battery_type'),
-    '배터리 제조사': ('car_detail_info', 'battery_manufacturer'),
-    '연료 타입': ('car_detail_info', 'fuel'),
-    '제조사': ('car', 'car_brand'),
-    '브랜드': ('car', 'car_brand'),
-    '이미지': ('car', 'car_image'),
-    '가격': ('car_detail_info', 'price'),
-}
-
-def get_all_cars():
-    connection = None
-    try:
-        connection = get_connection()
-        with connection.cursor() as cursor:
-            sql = "SELECT car_id, car_name FROM car"
-            cursor.execute(sql)
-            result = cursor.fetchall()
-            logger.info(f"DB에서 가져온 차량 목록: {result}")
-            return result
-    except Exception as e:
-        logger.error("❌ DB에서 차량 이름을 가져오는 중 오류 발생:", exc_info=True)
-        return []
-    finally:
-        if connection:
-            connection.close()
-            logger.info("DB 연결 종료")
-
-def extract_model_and_attribute(user_input):
-    cars = get_all_cars()
-    model_name = None
-    car_id = None
-    for car in cars:
-        if car["car_name"] in user_input:
-            model_name = car["car_name"]
-            car_id = car["car_id"]
-            break
-
-    attribute_keyword = None
-    for keyword in ATTRIBUTE_KEYWORDS.keys():
-        if keyword in user_input:
-            attribute_keyword = keyword
-            break
-
-    return model_name, car_id, attribute_keyword
-
-def get_car_attribute(model_name, attribute_keyword):
-    connection = None
-    try:
-        table_name, column_name = ATTRIBUTE_KEYWORDS[attribute_keyword]
-        connection = get_connection()
-        with connection.cursor() as cursor:
-            if table_name == 'car':
-                sql = f"SELECT {column_name} FROM car WHERE car_name = %s"
-                cursor.execute(sql, (model_name,))
-            elif table_name == 'car_detail_info':
-                sql = f"""
-                SELECT cdi.{column_name}
-                FROM car_detail_info cdi
-                JOIN car c ON c.car_id = cdi.car_id
-                WHERE c.car_name = %s
-                """
-                cursor.execute(sql, (model_name,))
-            else:
-                return None
-            result = cursor.fetchone()
-            if result:
-                return result[column_name]
-            else:
-                return None
-    except Exception as e:
-        logger.error("❌ DB에서 차량 속성 정보를 가져오는 중 오류 발생:", exc_info=True)
-        return None
-    finally:
-        if connection:
-            connection.close()
-            logger.info("DB 연결 종료")
-
-@router.post("/chat", response_model=ChatResponse)
+@car_recommend_router.post("/car_recommend_chat", response_model=ChatResponse)
 async def chat(chat_request: ChatRequest):
     session_id = chat_request.session_id or generate_session_id()
     user_input = chat_request.user_input
@@ -161,46 +80,48 @@ async def chat(chat_request: ChatRequest):
     conversation_history = session_data["history"]
 
     conversation_history.append({"role": "user", "content": user_input})
+    agent_outcome = None 
     logger.info(f"대화 이력 업데이트 - 현재 이력: {conversation_history}")
-
-    # RAG: 벡터 스토어에서 문서 검색
-    docs = search_documents(user_input, k=3)
-    if docs:
-        doc_context = "\n\n".join([f"참고 문서:\n{d}" for d in docs])
-    else:
-        doc_context = "관련 문서를 찾지 못했습니다."
-
-    # DB 조회
-    model_name, car_id, attribute_keyword = extract_model_and_attribute(user_input)
-    if model_name and attribute_keyword:
-        attribute_value = get_car_attribute(model_name, attribute_keyword)
-        if attribute_value:
-            car_info_text = f"{model_name}의 {attribute_keyword}는 {attribute_value}입니다."
-            logger.info(f"차량 정보 컨텍스트: {car_info_text}")
-        else:
-            car_info_text = f"{model_name}의 {attribute_keyword} 정보를 찾을 수 없습니다."
-    else:
-        car_info_text = "질문에서 차량 모델명이나 요청하신 정보를 이해하지 못했습니다."
-
-    system_prompt = get_system_prompt()
-    full_system_prompt = f"{system_prompt}\n\n{doc_context}\n\n{car_info_text}"
-
-    openai_history = [{"role": "system", "content": full_system_prompt}] + conversation_history
-
     try:
-        ai_response = get_openai_response(openai_history)
-        logger.info(f"OpenAI 응답: {ai_response}")
-    except Exception as e:
-        logger.error("OpenAI 호출 중 오류 발생", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"OpenAI API 호출 중 오류 발생: {str(e)}")
+        # 에이전트 생성 및 실행
+        toolkit = get_toolkit()
+        tools = toolkit.get_tools()
+        agent_runnable = create_agent(get_client(), tools, get_prompt())
 
-    conversation_history.append({"role": "assistant", "content": ai_response})
+        inputs = {
+            "input": user_input,
+            "chat_history": conversation_history,
+            "intermediate_steps": []
+        }
+
+        # 에이전트 실행 (여기를 바꿔야함 -> run(user_input))
+        agent_outcome = agent_runnable.invoke(inputs)
+
+        # 에이전트 완료 상태 확인
+        if is_agent_finish(agent_outcome):
+            agent_outcome = agent_outcome.return_values['output']
+        else:
+            # 추가 작업 수행
+            output = agent_excute(agent_outcome, tools)
+
+            # 상태 그래프 설정 및 실행
+            workflow = build_workflow(agent_runnable)
+            app = workflow.compile()
+            output = app.invoke(inputs)
+            agent_outcome = output.get("agent_outcome").return_values['output']
+
+    except Exception as e:
+        logger.error("오류 발생", exc_info=True)
+        agent_outcome = "죄송합니다. 요청을 처리하는 중 문제가 발생했습니다."  # 기본 응답 설정
+
+    # 대화 이력에 응답 추가
+    conversation_history.append({"role": "assistant", "content": agent_outcome})
     cleanup_sessions()
     logger.info(f"세션 {session_id} 정리 완료")
 
     return ChatResponse(
-        response=ai_response,
+        response=agent_outcome,
         session_id=session_id,
         history=conversation_history,
-        car_ids=[car_id] if car_id else []
+        car_ids=[]
     )
