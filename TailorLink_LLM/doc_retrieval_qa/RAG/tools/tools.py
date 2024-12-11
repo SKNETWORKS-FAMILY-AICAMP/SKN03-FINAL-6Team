@@ -4,6 +4,8 @@ from RAG.llm.embedding import generate_query_embedding
 from RAG.database.milvus_connector import get_collection
 
 
+
+
 def search_milvus(query: str) -> list:
     query_embeddings = generate_query_embedding([query])
     hybrid_results = hybrid_search(

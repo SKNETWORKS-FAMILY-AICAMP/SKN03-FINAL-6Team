@@ -1,14 +1,55 @@
 # from retriever import retrieve_documents
 # from llm.model import call_llm
-from RAG.utils.pdf_loader import load_pdf, clean_text
+from RAG.utils.pdf_loader import load_pdf
+from RAG.utils.preprocess import clean_text
 from RAG.database.milvus_connector import connect_to_milvus
 from RAG.database.vector_store import save_to_milvus
+from RAG.nodes.nodes import genesis_check, query_rewrite, vector_search, calculate_score,genesis_check_conditional,calculate_score_conditional
 
-# def run_rag(query):
-#     documents = retrieve_documents(query)
-#     llm_input = f"Query: {query}\nContext: {documents}"
-#     response = call_llm(llm_input)
-#     return response
+from langgraph.graph import StateGraph, START, END
+from RAG.types import State
+
+def run_rag(query):
+    graph_builder = StateGraph(State)
+
+    graph_builder.add_node("genesis_check", genesis_check)
+    graph_builder.add_node("vector_search", vector_search)
+    graph_builder.add_node("calculate_score", calculate_score)
+    graph_builder.add_node("query_rewrite", query_rewrite)
+
+    graph_builder.add_edge(START, "genesis_check")
+    graph_builder.add_edge('query_rewrite', "vector_search")
+    graph_builder.add_edge('vector_search', "calculate_score")
+    graph_builder.add_edge('query_rewrite', "vector_search")
+
+    graph_builder.add_conditional_edges(
+        'genesis_check',
+        genesis_check_conditional,
+        path_map={"search": "vector_search", END: END},
+    )
+
+    graph_builder.add_conditional_edges(
+        "calculate_score",
+        calculate_score_conditional,
+        path_map={"rewrite": "query_rewrite", END: END},
+    )
+
+    graph = graph_builder.compile()
+
+    state: State = {
+        "message": query,
+        "context": [],
+        "answer": "",
+        "change_count": 0,
+        "is_valid_question": False,
+        "is_pass": False,
+        "previous_question": [],
+        "best_answer": "",
+        "best_score": 0,
+    }
+    res = graph.invoke(state)
+
+    return res['best_answer']
 
 def process_pdf_and_store(file_path, collection_name):
     """

@@ -2,12 +2,13 @@ from click import prompt
 
 from RAG.types import State
 from langgraph.graph import START, END
-from RAG.llm.prompt_templates import get_genesis_manual_classification_prompt, get_answer_with_context_prompt, get_score_answer_prompt, get_rewrite_query_prompt
-from RAG.llm.model import get_OpenAI
+from RAG.llm.prompt_templates import *
+from RAG.llm.model import get_OpenAI, get_ollama
 from langchain_core.output_parsers import StrOutputParser
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from RAG.tools.tools import search_milvus
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+import ast
 
 # 제네시스 관련 질문 판단 노드 함수
 def genesis_check(state: State):
@@ -69,7 +70,6 @@ def calculate_score(state: State):
     # 응답 스키마를 기반으로 한 구조화된 출력 파서 초기화
     output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
 
-
     prompt = get_score_answer_prompt()
     llm = get_OpenAI()
 
@@ -81,7 +81,7 @@ def calculate_score(state: State):
         state['best_answer'] = state['answer']
         state['best_score'] = response['score']
 
-    if response['score']>=85 or response['change_count']==2:
+    if response['score']>=85 or state ['change_count']==2:
         state['is_pass'] = True
     else:
         state['is_pass'] = False
@@ -111,5 +111,18 @@ def query_rewrite(state: State) -> State:
     state['message'] = response
 
     return state
+
+# 질문 분리 노드 함수
+def query_split(state: State) -> State:
+    prompt = get_split_question_prompt()
+    llm = get_ollama('linkbricks-8B')
+    chain = prompt | llm | StrOutputParser()
+
+    query = state['message']
+
+    response = chain.invoke({'question': query})
+
+    actual_list = ast.literal_eval(response)
+
 
 

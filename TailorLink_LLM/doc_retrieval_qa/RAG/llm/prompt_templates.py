@@ -55,7 +55,8 @@ def get_score_answer_prompt():
     prompt = PromptTemplate.from_template(
         """
         너는 전문적인 사용자 도우미이며, 주어진 Question과 Answer를 가지고 Answer가 사용자가 원하는 답인지 점수를 계산해야 한다.  
-        점수를 계산할 때, Answer가 주어진 Context외의 정보를 가지고 있으면 안된다.
+        점수를 계산할 때, Answer가 주어진 Context 외의 정보를 가지고 있으면 안된다.
+        최고 점수를 100을 기준으로 점수를 계산해라.
         JSON 형식 Reason과 Score로 대답해라.
         # Context:  
         {context}
@@ -67,8 +68,8 @@ def get_score_answer_prompt():
         {answer}
         
         {{
-          "reason": "value1",
-          "score": 100
+          "reason": "value",
+          "score": 점수
         }}     
         """
     )
@@ -81,6 +82,32 @@ def get_rewrite_query_prompt():
 
         # Previous questions: 
         {previous}
+
+        """
+    )
+    return prompt
+
+def get_split_question_prompt():
+    prompt = PromptTemplate.from_template(
+        """
+        너는 RAG 전문가이다.  
+        주어진 질문이 복합적인 내용으로 구성된 경우, 각 질문을 독립적인 단위로 분리해야 한다.  
+        질문을 분리할 때, 각 질문이 명확하고 RAG의 검색 및 답변 생성 품질이 최대화되도록 작성해야 한다.  
+
+        ### 지침:
+        - 질문 분리는 논리적 흐름에 따라 자연스럽게 이루어져야 한다.
+        - 각 질문은 특정 주제나 개념에 집중하여 검색 가능한 형태로 작성해야 한다.
+        - 분리된 결과는 **리스트 형식**으로 반환하며, 추가 설명 없이 리스트만 출력해야 한다.
+
+        ### 예시:  
+        입력: "g90 시동 거는 방법과 스펙을 알려줘."  
+        출력: ["g90의 시동 거는 방법은 무엇인가?", "g90의 스펙은 무엇인가?"]
+
+        질문을 분리한 결과를 항상 리스트 형태로만 반환하라.
+
+        ### 입력 : {query}
+        ### 출력 :
+
 
         """
     )
