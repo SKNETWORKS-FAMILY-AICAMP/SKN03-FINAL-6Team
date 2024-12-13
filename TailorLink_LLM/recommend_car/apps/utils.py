@@ -1,8 +1,6 @@
 import os
 import logging
-import sqlite3
 
-import requests
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 
