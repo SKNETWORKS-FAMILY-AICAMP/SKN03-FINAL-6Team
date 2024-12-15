@@ -3,88 +3,95 @@ from langchain_core.documents import Document
 import pdfplumber
 from pdfplumber import open as open_pdf
 import json
+from pdfminer.high_level import extract_pages
+from pdfminer.layout import LTTextBoxHorizontal, LTFigure
+import math
+
+from pdfminer.high_level import extract_pages
+from pdfminer.layout import LTTextBoxHorizontal, LTFigure
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+import math
+import os
+
+def pdf_load(file_path, x_tolerance=100):
+    # x: x좌표 값 (정렬 대상인 x값)
+    # x_tolerance : 허용 오차 범위 (오차 허용 정돌르 조정하는 값)
+
+    def x_group_key(x):
+        return min(
+            [group for group in range(0, 1000, x_tolerance) if math.isclose(x, group, abs_tol=x_tolerance)],
+            default=x
+        )
+
+    # 파일명 추출
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
+
+    # 메타데이터 추출
+    metadata = {"car_model": file_name}
+    with open(file_path, 'rb') as f:
+        parser = PDFParser(f)
+        document = PDFDocument(parser)
+        if document.info:
+            metadata.update({
+                key: value.decode('utf-8', errors='ignore') if isinstance(value, bytes) else value
+                for key, value in document.info[0].items()
+            })
+
+    contents = []
+    for page, page_layout in enumerate(extract_pages(file_path)):
+
+        sorted_objs = sorted(
+            (obj for obj in page_layout._objs),
+            key=lambda obj: (x_group_key(obj.bbox[0]), -obj.bbox[3])
+        )
+
+        text_combine = ""
+        imgs = []
+        texts = []
+        for element in sorted_objs:
+            if isinstance(element, LTTextBoxHorizontal):
+                text_combine += element.get_text()
+                text = {
+                    "bbox": element.bbox,
+                    "width": element.width,
+                    "height": element.height,
+                    "x0": element.x0,
+                    "x1": element.x1,
+                    "y0": element.y0,
+                    "y1": element.y1,
+                }
+                texts.append(text)
+            elif isinstance(element, LTFigure):
+                img = {
+                    "bbox": element.bbox,
+                    "matrix": element.matrix,
+                    "width": element.width,
+                    "height": element.height,
+                    "x0": element.x0,
+                    "x1": element.x1,
+                    "y0": element.y0,
+                    "y1": element.y1,
+                }
+                imgs.append(img)
+
+        content = {
+            "page": page,
+            "text_combine": text_combine,
+            "texts": texts,
+            "img": imgs,
+        }
+        contents.append(content)
+
+    # 메타데이터와 콘텐츠 반환
+    return {"metadata": metadata, "contents": contents}
 
 
 
 
-def load_pdf(file_path: str):
-    with open_pdf(file_path) as pdf:
-        text = ""
-        for page in pdf.pages:
-            text += page.extract_text() + "\n"
-    return text.strip()
 
 
 
 
 
 
-
-
-
-
-
-
-
-def LoadPDF(file_path:str):
-    loader = PDFPlumberLoader(file_path)
-    docs = loader.load()
-    return docs
-
-def load_pdf2(file_path: str):
-    docs = []
-    # PDFPlumber를 사용하여 파일을 로드합니다.
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            # 페이지 크기 확인
-            width, height = page.width, page.height
-
-            # 2개의 영역(열)으로 나누기
-            left_bbox = (0, 0, width / 2, height)   # 왼쪽 열
-            right_bbox = (width / 2, 0, width, height)  # 오른쪽 열
-
-            # 왼쪽 열 텍스트 추출
-            left_text = page.within_bbox(left_bbox).extract_text() or ""
-            
-            # 오른쪽 열 텍스트 추출
-            right_text = page.within_bbox(right_bbox).extract_text() or ""
-
-            # 텍스트 병합
-            page_text = left_text + "\n" + right_text
-
-            # 문서를 Langchain 형식으로 변환하여 추가
-            if page_text.strip():
-                docs.append(Document(
-                    page_content=page_text,
-                    metadata={
-                        'source': file_path,
-                        'file_path': file_path,
-                        'page': page.page_number,
-                        'total_pages': len(pdf.pages),
-                        'CreationDate': pdf.metadata.get('CreationDate', None),
-                        'ModDate': pdf.metadata.get('ModDate', None)
-                    }
-                ))
-
-    return docs
-
-
-def loadPDF3(file_path: str):
-
-    with open("../data/data.json", "r", encoding="utf-8") as f:
-        state = json.load(f)
-
-        docs = []
-        # PDFPlumber를 사용하여 파일을 로드합니다.
-        for page_num in state['page_numbers']:
-            # 문서를 Langchain 형식으로 변환하여 추가
-            page_text = state['texts'][str(page_num)]
-            if page_text.strip():
-                docs.append(Document(
-                    page_content=page_text,
-                    metadata={
-                        'source': state['filepath'],
-                        'page': page_num,
-                        'total_pages': len(state['page_metadata']),                     }
-                    ))
-    return docs

@@ -5,8 +5,18 @@ from RAG.database.milvus_connector import get_collection
 
 
 
-
+@tool
 def search_milvus(query: str) -> list:
+    """
+    Search in the Milvus vector database using hybrid search.
+    Combines dense and sparse embeddings for improved results.
+
+    Args:
+        query (str): The input query string.
+
+    Returns:
+        list: A list of search results from Milvus.
+    """
     query_embeddings = generate_query_embedding([query])
     hybrid_results = hybrid_search(
         get_collection('manual'),

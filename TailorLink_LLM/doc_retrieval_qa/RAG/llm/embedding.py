@@ -2,13 +2,17 @@ import torch
 from pymilvus.model.hybrid import BGEM3EmbeddingFunction
 
 # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DEVICE="cpu"
+DEVICE="cuda"
 
 bge_m3_ef = BGEM3EmbeddingFunction(
         model_name='BAAI/bge-m3', # Specify the model name
         device=DEVICE, # Specify the device to use, e.g., 'cpu' or 'cuda:0'
-        use_fp16=(DEVICE == "cuda") # Specify whether to use fp16. Set to `False` if `device` is `cpu`.
+        use_fp16=False # Specify whether to use fp16. Set to `False` if `device` is `cpu`.
     )
+
+def get_embedding_dim():
+    docs_embeddings = bge_m3_ef.encode_documents(['Hi'])
+    return bge_m3_ef.dim["dense"]
 
 def generate_embedding(docs:list):
     """
@@ -24,10 +28,10 @@ def generate_embedding(docs:list):
     docs_embeddings = bge_m3_ef.encode_documents(docs)
 
     # Print embeddings
-    print("Embeddings:", docs_embeddings)
-    # Print dimension of dense embeddings
-    print("Dense document dim:", bge_m3_ef.dim["dense"], docs_embeddings["dense"][0].shape)
-    print("Sparse document dim:", bge_m3_ef.dim["sparse"], list(docs_embeddings["sparse"])[0].shape)
+    # print("Embeddings:", docs_embeddings)
+    # # Print dimension of dense embeddings
+    # print("Dense document dim:", bge_m3_ef.dim["dense"], docs_embeddings["dense"][0].shape)
+    # print("Sparse document dim:", bge_m3_ef.dim["sparse"], list(docs_embeddings["sparse"])[0].shape)
 
     return docs_embeddings
 
