@@ -53,4 +53,3 @@ async def startup_event():
     logger.info("업데이트 시작")
     asyncio.create_task(periodic_update())
 
-
