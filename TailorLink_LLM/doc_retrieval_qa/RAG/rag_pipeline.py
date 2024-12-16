@@ -1,6 +1,6 @@
 # from retriever import retrieve_documents
 # from llm.model import call_llm
-from RAG.utils.pdf_loader import load_pdf
+from RAG.utils.pdf_loader import pdf_load
 from RAG.utils.preprocess import clean_text
 from RAG.database.milvus_connector import connect_to_milvus
 from RAG.database.vector_store import save_to_milvus
@@ -59,7 +59,7 @@ def process_pdf_and_store(file_path, collection_name):
     connect_to_milvus()
 
     # 1. PDF에서 텍스트 추출
-    raw_text = load_pdf(file_path)
+    raw_text = pdf_load(file_path)
     if not raw_text:
         raise ValueError("Failed to extract text from PDF.")
 
