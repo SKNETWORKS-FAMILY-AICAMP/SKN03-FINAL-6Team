@@ -26,5 +26,6 @@ ENV PYTHONPATH=/app
 EXPOSE 8000
 # 컨테이너 실행 유무 확인 
 HEALTHCHECK CMD curl --fail htp://localhost:8000/health || exit 1
-# 웹서버 실행 
+
 ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
