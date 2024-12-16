@@ -34,7 +34,7 @@ class PageInfo(BaseModel):
 class ChatResponse(BaseModel):
     response: str = Field(..., description="AI의 최종 응답 텍스트")
     session_id: str = Field(..., description="현재 세션 ID")
-    history: list[Message] = Field(..., description="대화 이력")
+    agent: str = Field(..., description="기능 설명")
     response_type: str = Field(..., description="응답 유형 (e.g., 사용자, ai)")
     page_info: PageInfo = Field(None, description="도구에서 반환된 key-value 결과")
     suggest_question: list = Field(..., description="예상 질문")
@@ -75,14 +75,14 @@ async def chat(chat_request: ChatRequest):
     conversation_history = session_data["history"]
 
     conversation_history.append({"role": "user", "content": user_input})
-
+    agent_id = "recommend_car"
     # 기본값 초기화
     response_type = ""
     page_info = {
-                    "car_id" : "",
-                    "car_name": "",
-                    "car_image": "",    
-                    }
+        "car_id" : "",
+        "car_name": "",
+        "car_image": "",    
+    }
     timestamp = datetime.now()
     try:
         # Tool 사용
@@ -111,6 +111,7 @@ async def chat(chat_request: ChatRequest):
         response=ai_response,
         session_id=session_id,
         response_type=response_type,
+        agent_id=agent_id,
         page_info=page_info,
         suggest_question=suggest_question,
         timestamp=timestamp

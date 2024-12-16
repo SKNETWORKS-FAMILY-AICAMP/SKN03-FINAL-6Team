@@ -8,6 +8,7 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.chunking_strategy import RegexChunking
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from database.milvus_connector import connect_to_milvus, save_to_milvus, create_milvus_collection
 
 load_dotenv()
 
@@ -27,18 +28,26 @@ extraction_strategy = LLMExtractionStrategy(
     apply_chunking=False,
     instruction=(
         """
-        크롤링한 내용에서 다음 세부 정보를 추출하고 반드시 한국어로 번역해서 출력하세요:
-        1. 차량명 
-        2. 차량 정보
-        3. 차량 리뷰
-        4. 페이지에 할당된 키워드 목록.
+        크롤링한 내용을 다음 세부 정보로 정리하고, 한국어로 번역하여 Markdown 형식으로 작성하세요:
 
-        결과는 다음과 같은 JSON 형식이어야 합니다:
-        { "car_name": "차량명", "car_info": "차량 정보", "car_review": "차량 리뷰", "keywords": ["키워드1", "키워드2", "키워드3"] }
+        ### 차량명
+        차량명 내용
+
+        ### 차량 정보
+        차량 정보 내용
+
+        ### 차량 리뷰
+        차량 리뷰 내용
+
+        ### 키워드 목록
+        - 키워드1
+        - 키워드2
+        - 키워드3
         """
     )
 )
 
+# 비동기 크롤링 및 요약 함수
 async def crawl_and_summarize(url):
     if not url:
         return "URL이 제공되지 않았습니다. 클립보드에 URL이 복사되어 있는지 확인해주세요."
@@ -53,7 +62,10 @@ async def crawl_and_summarize(url):
         )
         return result
 
-async def summarize_url(url):
+async def summarize_and_store_url(url, save_to_db):
+    """
+    URL 크롤링 후 요약 반환 및 DB 저장 (옵션에 따라)
+    """
     if not url:
         return "URL이 제공되지 않았습니다. 클립보드에 URL이 복사되어 있는지 확인해주세요."
     
@@ -62,23 +74,45 @@ async def summarize_url(url):
         return result
     if result.success:
         data = json.loads(result.extracted_content)[0]
-        
+
+        # 요약 결과 생성
         output = (
             f"**차량명:** {data['car_name']}\n\n"
             f"**차량 정보:** {data['car_info']}\n\n"
             f"**차량 리뷰:** {data['car_review']}\n\n"
             f"**키워드:** {', '.join(data['keywords'])}"
         )
+
+        # 사용자가 DB 저장을 선택한 경우 Milvus에 저장
+        if save_to_db:
+            document_id = data['car_name']
+            text = (
+                f"차량명: {data['car_name']}\n"
+                f"차량 정보: {data['car_info']}\n"
+                f"차량 리뷰: {data['car_review']}\n"
+                f"키워드: {', '.join(data['keywords'])}"
+            )
+            metadata = {
+                "car_name": data["car_name"],
+                "keywords": data["keywords"]
+            }
+
+            connect_to_milvus()
+            create_milvus_collection("genesis_cars")
+            save_to_milvus("genesis_cars", document_id, text, metadata)
+            output += "\n\n**DB에 저장되었습니다.**"
+
         return output
     else:
         return f"페이지를 크롤링하고 요약하는 데 실패했습니다. 오류: {result.error_message}"
 
-def run_summarize_url():
+# Gradio를 통해 실행
+def run_summarize_url(save_to_db):
     try:
         url = pyperclip.paste()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(summarize_url(url))
+        result = loop.run_until_complete(summarize_and_store_url(url, save_to_db))
         return url, result
     except Exception as e:
         return "", f"오류가 발생했습니다: {str(e)}"
@@ -86,14 +120,16 @@ def run_summarize_url():
 with gr.Blocks() as demo:
     gr.Markdown("# 제네시스 차량 정보 및 리뷰 요약기")
     gr.Markdown("1. 브라우저에서 요약할 제네시스 차량 페이지의 URL을 복사하세요.")
-    gr.Markdown("2. 'URL 붙여넣고 요약하기' 버튼을 클릭하세요.")
+    gr.Markdown("2. 'URL 붙여넣고 요약하기' 버튼을 클릭하세요. (DB 저장 옵션 선택 가능)")
     
+    save_to_db_checkbox = gr.Checkbox(label="DB에 저장하기", value=False)
     url_display = gr.Textbox(label="처리된 URL", interactive=False)
     summarize_button = gr.Button("URL 붙여넣고 요약하기")
     output = gr.Markdown(label="요약 결과")
 
     summarize_button.click(
-        fn=run_summarize_url,
+        fn=lambda save_to_db: run_summarize_url(save_to_db),
+        inputs=[save_to_db_checkbox],
         outputs=[url_display, output]
     )
 
