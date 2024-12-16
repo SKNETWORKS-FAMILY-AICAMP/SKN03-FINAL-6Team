@@ -94,11 +94,11 @@ async def chat(chat_request: ChatRequest):
             prompt=get_prompt()
         )
         agent_outcome = agent_runnable.invoke(user_input)
-        ai_response = agent_outcome["output"]
 
         # Tool 관련 데이터 추출
         page_info = agent_outcome.get("page_info", {})  # e.g., key-value 결과
         suggest_question = []
+        ai_response = agent_outcome["output"]
     except Exception as e:
         ai_response = "죄송합니다. 요청을 처리하는 중 문제가 발생했습니다."
         response_type = "error"
