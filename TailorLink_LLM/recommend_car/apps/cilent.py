@@ -10,7 +10,7 @@ def langchain_param():
     return params
 
 
-def get_client(model_id: str = "gpt-4.0-mini"):
+def get_client(model_id: str = "gpt-4o-mini"):
     try:
         return ChatOpenAI(model=model_id, streaming=True, **langchain_param())
     except Exception as e:
