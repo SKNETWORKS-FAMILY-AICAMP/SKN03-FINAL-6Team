@@ -14,22 +14,19 @@ logging.basicConfig(
         logging.FileHandler("app.log"),  # 파일 출력
     ],
 )
-
-logger = logging.getLogger("recommend_car")
-
 uvicorn_logger = logging.getLogger("uvicorn")
 uvicorn_logger.setLevel(logging.DEBUG)
-
-app = FastAPI(
-    title="차량 추천 전문 채팅 봇",
-    description="OpenAI를 사용한 채팅 봇",
-    version="1.0.0",
-    debug=True
-)
 
 # 로깅 추가
 logger = logging.getLogger("recommend_car")
 logger.info("FastAPI 애플리케이션 시작!")
+
+app = FastAPI(
+    title="차량 전문 채팅 봇",
+    description="OpenAI를 사용한 채팅 봇",
+    version="1.0.0",
+    debug=True
+)
 
 # 라우터 등록
 app.include_router(chatbot.car_recommend_router, prefix="/api", tags=["car_recommend_Chatbot"])

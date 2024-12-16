@@ -1,6 +1,6 @@
 from pymilvus import connections, Collection, utility
 import os
-from ssmparam import get_ssm_parameter
+from common.ssmparam import get_ssm_parameter
 
 MILVUS_URI = get_ssm_parameter('/tailorlink/milvus/MILVUS_URI')
 MILVUS_TOKEN = get_ssm_parameter('/tailorlink/milvus/MILVUS_TOKEN')
