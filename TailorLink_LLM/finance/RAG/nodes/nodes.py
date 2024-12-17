@@ -14,7 +14,7 @@ output_parser = StrOutputParser()
 # memory tools
 tools = [save_recall_memory, search_recall_memories]
 
-def memorizer(state: state) -> state:
+def load_memorizer(state: state) -> state:
     
     llm_with_tools = llm.bind_tools(tools)
     print("---메모리를 불러 왔습니다.---")
