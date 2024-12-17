@@ -1,5 +1,5 @@
-from RAG.database.milvus_connector import get_collection
-from RAG.llm.embedding import generate_embedding
+from common.milvus_connector import get_collection
+from doc_retrieval_qa.RAG.llm.embedding import generate_embedding
 
 def save_to_milvus(collection_name, document_id, processed_text):
     # Milvus에 저장

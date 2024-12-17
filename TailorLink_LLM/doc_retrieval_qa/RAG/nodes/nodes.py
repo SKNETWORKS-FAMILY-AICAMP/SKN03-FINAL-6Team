@@ -1,12 +1,12 @@
 from click import prompt
 
-from RAG.types import State
+from doc_retrieval_qa.RAG.types import State
 from langgraph.graph import START, END
-from RAG.llm.prompt_templates import *
-from RAG.llm.model import get_OpenAI, get_ollama
+from doc_retrieval_qa.RAG.llm.prompt_templates import *
+from doc_retrieval_qa.RAG.llm.model import get_OpenAI, get_ollama
 from langchain_core.output_parsers import StrOutputParser
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from RAG.tools.tools import search_milvus
+from doc_retrieval_qa.RAG.tools.tools import search_milvus
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 import ast
 

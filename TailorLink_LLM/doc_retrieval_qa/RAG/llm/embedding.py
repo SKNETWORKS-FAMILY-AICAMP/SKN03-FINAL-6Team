@@ -1,8 +1,7 @@
-import torch
+# import torch
 from pymilvus.model.hybrid import BGEM3EmbeddingFunction
 
-# DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DEVICE="cuda"
+DEVICE = "cpu"
 
 bge_m3_ef = BGEM3EmbeddingFunction(
         model_name='BAAI/bge-m3', # Specify the model name

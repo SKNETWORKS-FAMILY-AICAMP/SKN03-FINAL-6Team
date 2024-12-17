@@ -8,13 +8,15 @@ from typing import Optional
 from langchain_community.agent_toolkits import create_sql_agent
 from pydantic import BaseModel
 from datetime import datetime
-from ..utils import connect_aws_db
-from ..prompt_manager import get_prompt
-from ..cilent import get_client
-#나중에 수정해야함.
-# from ..workflow import build_workflow
+import json
+import asyncio
+from fastapi.responses import StreamingResponse
 
-car_recommend_router = APIRouter()
+from doc_retrieval_qa.RAG.rag_pipeline import run_rag
+from common.milvus_connector import connect_to_milvus
+manual_qa_router = APIRouter()
+
+connect_to_milvus()
 
 conversation_memory = {}
 SESSION_EXPIRY_SECONDS = 3600
@@ -26,11 +28,6 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None)
     user_input: str = Field(...)
-
-class PageInfo(BaseModel):
-    car_id: str
-    car_name: str
-    car_image: str
 
 class ChatResponse(BaseModel):
     response: str = Field(..., description="AI의 최종 응답 텍스트")
@@ -65,7 +62,7 @@ def cleanup_sessions():
     for session_id in expired_sessions:
         del conversation_memory[session_id]
 
-@car_recommend_router.post("/car_recommend_chat", response_model=ChatResponse)
+@manual_qa_router.post("/manual_qa", response_model=ChatResponse)
 async def chat(chat_request: ChatRequest):
     session_id = chat_request.session_id or generate_session_id()
     user_input = chat_request.user_input
@@ -76,7 +73,8 @@ async def chat(chat_request: ChatRequest):
     conversation_history = session_data["history"]
 
     conversation_history.append({"role": "user", "content": user_input})
-    agent_id = "recommend_car"
+
+    agent_id = "manual_qa"
     # 기본값 초기화
     response_type = ""
     page_info = {
@@ -85,45 +83,33 @@ async def chat(chat_request: ChatRequest):
         "car_image": "",    
     }
     timestamp = datetime.now()
-    suggest_question = []
-    try:
-        # Tool 사용
-        agent_runnable = create_sql_agent(
-            get_client(),
-            db=connect_aws_db(),
-            agent_type="openai-tools",
-            verbose=True,
-            prompt=get_prompt()
-        )
-        agent_outcome = agent_runnable.invoke(user_input)
-        ai_response = agent_outcome["output"]
 
-        # Tool 관련 데이터 추출
-        page_info = agent_outcome.get("page_info", {})  # e.g., key-value 결과
+    res = run_rag(user_input)
 
-
-    except Exception as e:
-        logging.error(e)
-        ai_response = "죄송합니다. 요청을 처리하는 중 문제가 발생했습니다."
-        response_type = "error"
-
-
-    if not page_info:
-        page_info = {
-                "car_id" : "",
-                "car_name": "",
-                 "car_image": "",
-                }
-    # 대화 이력에 응답 추가
-    conversation_history.append({"role": "assistant", "content": ai_response})
     cleanup_sessions()
 
     return ChatResponse(
-        response=ai_response,
+        response=res,
         session_id=session_id,
         response_type=response_type,
         agent_id=agent_id,
         page_info=page_info,
-        suggest_question=suggest_question,
+        suggest_question=[],
         timestamp=timestamp
     )
+@manual_qa_router.post("/manual", response_model=ChatResponse)
+async def ask_query(chat_request: ChatRequest):
+    question = chat_request.user_input
+    print(question)
+    async def mock_stream_openai_response(prompt):
+        accumulated_text = ""  # 누적 텍스트 저장
+        res = run_rag(prompt)
+        print(type(res))
+        for letter in res:
+            accumulated_text += letter  # 텍스트 누적
+            yield json.dumps({"status": "processing", "data": letter}, ensure_ascii=False) + "\n"
+            await asyncio.sleep(0.05)  # 스트림 딜레이 시뮬레이션
+
+        yield json.dumps({"status": "complete", "data": "Stream finished"}, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(mock_stream_openai_response(question), media_type="text/event-stream")
