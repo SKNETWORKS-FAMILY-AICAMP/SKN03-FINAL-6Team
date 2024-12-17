@@ -1,3 +1,4 @@
+from RAG.llm import prompt
 from RAG.llm.prompt import *
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from RAG.types import state
@@ -5,9 +6,48 @@ from RAG.llm.model import get_OpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 from RAG.database.database import faiss_db
+from RAG.tools.memory_tools import *
 
 llm = get_OpenAI()
 output_parser = StrOutputParser()
+
+# memory tools
+tools = [save_recall_memory, search_recall_memories]
+
+def memorizer(state: state) -> state:
+    
+    llm_with_tools = llm.bind_tools(tools)
+    print("---메모리를 불러 왔습니다.---")
+    prompt = memory_prompt()
+    messages = state['messages']
+    
+    # 기존 메모리를 포맷팅
+    recall_str = (
+        "<recall_memory>\n" + "\n".join(state.get("recall_memories", [])) + "\n</recall_memory>"
+    )
+    chain = prompt | llm_with_tools
+    
+    # LLM에 현재 대화 및 기존 메모리 전달
+    response = chain.invoke({
+        "messages": messages,
+        "recall_memories": recall_str
+    })
+    
+    state['recall_memories'].append(response)
+    
+    # 대화 메시지에도 LLM 응답 추가
+    state["messages"].append({"role": "assistant", "content": response})
+    
+    return state
+
+# 여기 부분 작성중
+# def load_memories(state : state) -> state:
+    
+#     print("---메모리를 불러오는 중 입니다.---")
+    
+#     return state
+
+
 
 # Routing
 def Router(state: state) -> state:

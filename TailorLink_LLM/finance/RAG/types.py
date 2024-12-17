@@ -27,5 +27,5 @@ class state(TypedDict):
     # 생성된 최종 답변
     generated_response: list  # 시스템의 최종 답변
     
-    # wrong_answer : list
+    recall_memories: list
 
