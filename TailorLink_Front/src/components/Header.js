@@ -1,20 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
-import logoImage from "../assets/images/TailorLink.png";
+import logoImage from "../assets/images/MainLogo.png";
 
 const TopNav = () => {
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const location = useLocation();
-
-  const handleMouseEnter = () => {
-    setIsDropdownVisible(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDropdownVisible(false);
-  };
-
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -37,47 +27,25 @@ const TopNav = () => {
               </Link>
             </li>
             <li className="nav-item">
+              {/* 라우팅 경로를 `/Product/ChatBot`으로 변경 */}
               <Link
-                to="/features"
-                className={`nav-link ${isActive("/features") ? "active" : ""}`}
+                to="/Product/ChatBot"
+                className={`nav-link ${
+                  isActive("/Product/ChatBot") ? "active" : ""
+                }`}
               >
                 기능
               </Link>
             </li>
-            <li
-              className="nav-item"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              <span className="nav-link">고객센터</span>
-              {isDropdownVisible && (
-                <div className="dropdown">
-                  <div className="left-section">
-                    <ul>
-                      <li>
-                        <Link
-                          to="/service/contactus"
-                          className={`dropdown-link ${
-                            isActive("/service/contactus") ? "active" : ""
-                          }`}
-                        >
-                          문의하기
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/service/board"
-                          className={`dropdown-link ${
-                            isActive("/service/board") ? "active" : ""
-                          }`}
-                        >
-                          게시판
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              )}
+            <li className="nav-item">
+              <Link
+                to="/service/board"
+                className={`nav-link ${
+                  isActive("/service/board") ? "active" : ""
+                }`}
+              >
+                고객센터
+              </Link>
             </li>
           </ul>
         </nav>
