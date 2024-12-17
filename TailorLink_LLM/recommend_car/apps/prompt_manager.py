@@ -37,6 +37,21 @@ def get_system_prompt():
       2. **정보 부족 시:** "추천을 위해 예산, 차량 종류, 사용 목적 등을 알려주세요."
       """
 
+def get_suggest_question_prompt(car_name, features):
+   """
+   예상 질문 생성 프롬프트 템플릿
+   """
+   prompt = f"""
+   사용자가 다음과 같은 차량을 추천받았습니다:
+   차량명: {car_name}
+   특징: {features}
+
+   이 추천 결과를 바탕으로, 사용자가 추가로 물어볼 수 있는 예상 질문 3가지를 생성해 주세요.
+   - 질문은 짧고 명확하게 작성해 주세요.
+   - 예: "이 차량의 가격은 얼마인가요?", "유사한 다른 모델이 있나요?"
+   """
+   return prompt.strip()
+
 def get_prompt():
    prompt = hub.pull("hwchase17/openai-functions-agent")
 

@@ -1,3 +1,5 @@
+import torch
+from transformers import AutoModel, AutoTokenizer
 from pymilvus import MilvusClient, DataType
 from recommend_car.apps.ssmparam import get_ssm_parameter
 
@@ -7,6 +9,23 @@ MILVUS_TOKEN = get_ssm_parameter('/tailorlink/milvus/MILVUS_TOKEN')
 MILVUS_DB_NAME = 'tailorlink'
 # Milvus 클라이언트 초기화
 client = MilvusClient(uri=MILVUS_URI, token=MILVUS_TOKEN, db_name="tailorlink")
+
+# KoBERT 모델 및 토크나이저 초기화
+model = AutoModel.from_pretrained("monologg/kobert")
+tokenizer = AutoTokenizer.from_pretrained("monologg/kobert", trust_remote_code=True)
+
+def generate_kobert_embedding(text):
+    """
+    KoBERT를 사용해 텍스트 임베딩 생성
+    """
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0).tolist()
+    if len(embedding) != 768:
+        raise ValueError(f"임베딩 차원이 768이 아닙니다. 현재 차원: {len(embedding)}")
+    print(f"임베딩 생성 완료: 길이 {len(embedding)}")  # 디버깅용 출력
+    return embedding
 
 def create_milvus_collection(collection_name):
     """

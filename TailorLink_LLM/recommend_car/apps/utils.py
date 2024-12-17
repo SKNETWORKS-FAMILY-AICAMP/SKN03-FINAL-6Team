@@ -158,49 +158,57 @@ def find_matching_car_id(crawled_car_name):
         print("DB에 car_name을 추가하는 데 실패했습니다.")
         return None
 
-def rerank_results(db_results, milvus_results, strategy="weighted", weights=None):
+def rerank_results(db_results, milvus_results, weights=[0.6, 0.4]):
     """
-    DB 결과와 Milvus 결과를 Re-rank하여 최종 리스트를 반환합니다.
-    :param db_results: SQL DB에서 가져온 결과 리스트
-    :param milvus_results: Milvus에서 가져온 벡터 검색 결과 리스트
-    :param strategy: "weighted" 또는 "rrf" 선택
-    :param weights: WeightedRanker에 사용할 가중치 리스트
+    DB와 Milvus 검색 결과를 Re-ranking 하는 함수.
     """
-    if strategy == "weighted":
-        if not weights:
-            weights = [0.7, 0.3]  # 기본 가중치 설정
+    try:
+        combined_results = []
 
-        # WeightedRanker 설정
-        reranker = WeightedRanker(*weights)
+        # DB 결과 추가
+        for result in db_results:
+            combined_results.append({
+                "car_id": result.get("car_id", "unknown"),
+                "car_name": result.get("car_name", "알 수 없는 차량"),
+                "score": weights[0] * 1.0  # 기본 점수 (DB)
+            })
 
-        # Milvus 결과의 점수를 추출
-        scores = [result['distance'] for result in milvus_results]
-        reranked_results = reranker.rerank(
-            routes=[
-                {"id": result['id'], "score": score}
-                for result, score in zip(milvus_results, scores)
-            ]
-        )
-    elif strategy == "rrf":
-        # RRFRanker 설정
-        reranker = RRFRanker()
-        reranked_results = reranker.rerank(
-            routes=[
-                {"id": result['id'], "rank": idx + 1}
-                for idx, result in enumerate(milvus_results)
-            ]
-        )
-    else:
-        raise ValueError("지원되지 않는 re-ranking 전략입니다.")
+        # Milvus 결과 추가
+        for result in milvus_results:
+            combined_results.append({
+                "car_id": result.get("car_id", "unknown"),
+                "car_name": result.get("car_name", "알 수 없는 차량"),
+                "score": weights[1] * (100.0 - result.get("score", 100.0))  # 거리 반전 점수
+            })
 
-    # Re-ranked ID와 DB 결과 매칭
-    final_results = []
-    for rerank_result in reranked_results:
-        for db_result in db_results:
-            if rerank_result['id'] == db_result['id']:
-                final_results.append({**db_result, "score": rerank_result['score']})
-                break
+        # 점수를 기준으로 정렬
+        reranked_results = sorted(combined_results, key=lambda x: x["score"], reverse=True)
+        print("Re-ranking 결과:", reranked_results)
+        return reranked_results
 
-    # 점수 기준으로 정렬
-    final_results.sort(key=lambda x: x['score'], reverse=True)
-    return final_results
+    except Exception as e:
+        print(f"[ERROR] Re-ranking 중 오류 발생: {e}")
+        return [{"car_id": "unknown", "car_name": "알 수 없는 차량", "score": 0.0}]
+
+def parse_milvus_results(search_results):
+    """
+    Milvus 검색 결과를 파싱하여 사용할 수 있는 형태로 변환합니다.
+    """
+    parsed_results = []
+    try:
+        for hit in search_results:
+            if isinstance(hit, dict):
+                parsed_results.append({
+                    "car_id": hit.get("id", "unknown"),
+                    "car_name": "알 수 없는 차량",
+                    "score": hit.get("distance", 100.0)  # 거리 기반 점수
+                })
+    except Exception as e:
+        print(f"[ERROR] Milvus 결과 파싱 중 오류 발생: {e}")
+
+    if not parsed_results:
+        print("Milvus 결과가 비어 있습니다. 기본값으로 설정합니다.")
+        parsed_results = [{"car_id": "unknown", "car_name": "알 수 없는 차량", "score": 100.0}]
+
+    print("파싱된 Milvus 결과:", parsed_results)
+    return parsed_results

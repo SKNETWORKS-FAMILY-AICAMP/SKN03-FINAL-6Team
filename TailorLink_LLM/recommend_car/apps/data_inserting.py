@@ -1,10 +1,8 @@
-import sys
 import os
 import json
 import asyncio
 import gradio as gr
 import pyperclip
-import torch
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.chunking_strategy import RegexChunking
@@ -13,6 +11,7 @@ from dotenv import load_dotenv
 from transformers import AutoModel, AutoTokenizer
 from recommend_car.apps.database.milvus_connector import (
     client,
+    generate_kobert_embedding,
     create_milvus_collection,
     insert_or_update_data
 )
@@ -68,19 +67,6 @@ extraction_strategy = LLMExtractionStrategy(
     )
 )
 
-# 임베딩 생성 함수
-def generate_kobert_embedding(text):
-    """
-    KoBERT를 사용해 텍스트 임베딩 생성
-    """
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0).tolist()
-    if len(embedding) != 768:
-        raise ValueError(f"임베딩 차원이 768이 아닙니다. 현재 차원: {len(embedding)}")
-    print(f"임베딩 생성 완료: 길이 {len(embedding)}")  # 디버깅용 출력
-    return embedding
 
 # 비동기 크롤링 및 요약 함수
 async def crawl_and_summarize(url):
