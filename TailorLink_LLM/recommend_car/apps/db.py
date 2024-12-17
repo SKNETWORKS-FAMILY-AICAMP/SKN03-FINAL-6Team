@@ -16,7 +16,6 @@ DB_PASSWORD = get_ssm_parameter('/tailorlink/mysql/MYSQL_PASSWORD')
 DB_NAME = get_ssm_parameter('/tailorlink/mysql/MYSQL_DB_NAME')
 
 def get_connection():
-    logging.debug(f"에")
     connection = pymysql.connect(
         host=DB_HOST,
         port=DB_PORT,

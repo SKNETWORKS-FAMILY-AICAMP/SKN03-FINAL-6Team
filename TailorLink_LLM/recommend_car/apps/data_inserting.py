@@ -1,16 +1,30 @@
+import sys
 import os
 import json
 import asyncio
 import gradio as gr
 import pyperclip
+import torch
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.chunking_strategy import RegexChunking
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from database.milvus_connector import connect_to_milvus, save_to_milvus, create_milvus_collection
+from transformers import AutoModel, AutoTokenizer
+from recommend_car.apps.database.milvus_connector import (
+    MILVUS_DB_NAME,
+    create_milvus_collection,
+    insert_to_milvus,
+    update_dynamic_fields,
+    search_in_milvus
+)
+from recommend_car.apps.utils import find_matching_car_id
 
 load_dotenv()
+
+# KoBERT 모델 및 토크나이저 초기화
+model = AutoModel.from_pretrained("monologg/kobert")
+tokenizer = AutoTokenizer.from_pretrained("monologg/kobert", trust_remote_code=True)
 
 # 제네시스 차량 정보를 저장할 데이터 모델 정의
 class GenesisCarInfo(BaseModel):
@@ -29,6 +43,7 @@ extraction_strategy = LLMExtractionStrategy(
     instruction=(
         """
         크롤링한 내용을 다음 세부 정보로 정리하고, 한국어로 번역하여 Markdown 형식으로 작성하세요:
+        리뷰내용은 근데 조금 더 많이 나타내주세요.
 
         ### 차량명
         차량명 내용
@@ -46,6 +61,17 @@ extraction_strategy = LLMExtractionStrategy(
         """
     )
 )
+
+# 임베딩 생성 함수
+def generate_kobert_embedding(text):
+    """
+    KoBERT를 사용하여 텍스트 임베딩 생성
+    """
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0)  # [CLS] 토큰 사용
+    return embedding.tolist()
 
 # 비동기 크롤링 및 요약 함수
 async def crawl_and_summarize(url):
@@ -85,7 +111,6 @@ async def summarize_and_store_url(url, save_to_db):
 
         # 사용자가 DB 저장을 선택한 경우 Milvus에 저장
         if save_to_db:
-            document_id = data['car_name']
             text = (
                 f"차량명: {data['car_name']}\n"
                 f"차량 정보: {data['car_info']}\n"
@@ -94,17 +119,25 @@ async def summarize_and_store_url(url, save_to_db):
             )
             metadata = {
                 "car_name": data["car_name"],
+                "car_info": data["car_info"],
+                "car_review": data["car_review"],
                 "keywords": data["keywords"]
             }
+            # KoBERT 임베딩 생성
+            embedding = generate_kobert_embedding(text)
+            car_id = find_matching_car_id()
+            # Milvus에 저장
+            create_milvus_collection(MILVUS_DB_NAME)
+            insert_to_milvus(MILVUS_DB_NAME, )
 
-            connect_to_milvus()
-            create_milvus_collection("genesis_cars")
-            save_to_milvus("genesis_cars", document_id, text, metadata)
+            # 데이터 삽입 후 인덱스 생성 및 컬렉션 로드
+            
             output += "\n\n**DB에 저장되었습니다.**"
 
         return output
     else:
         return f"페이지를 크롤링하고 요약하는 데 실패했습니다. 오류: {result.error_message}"
+
 
 # Gradio를 통해 실행
 def run_summarize_url(save_to_db):
