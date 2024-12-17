@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import json
 import asyncio
 
-from common.milvus_connector import connect_to_milvus
+from core.milvus_connector import connect_to_milvus
 
 from RAG.rag_pipeline import run_rag
 app = FastAPI()

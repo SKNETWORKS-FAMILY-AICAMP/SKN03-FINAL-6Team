@@ -12,13 +12,10 @@ RUN apt-get update && apt-get install -y \
 
 # 코드 복사 
 COPY . /app
-COPY requirements.txt /app
-
 # 실행 폴더 정의 
 WORKDIR /app
 
 # 필요한 라이브러리 설치
-COPY requirements.txt /app/requirements.txt
 RUN pip3 install --no-cache-dir --upgrade pip
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
 #RUN pip3 install --no-cache-dir uvicorn

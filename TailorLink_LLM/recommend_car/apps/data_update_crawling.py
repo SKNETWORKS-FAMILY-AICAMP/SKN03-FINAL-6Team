@@ -1,7 +1,7 @@
 # recommend_car/apps/data_update_crawling.py
 import requests
 from bs4 import BeautifulSoup
-from recommend_car.apps.db import get_connection  # 기존 apps.db -> .db 로 수정
+from core.mysql_connctor import get_connection  # 기존 apps.db -> .db 로 수정
 import logging
 
 logger = logging.getLogger("recommend_car")

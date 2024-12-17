@@ -1,0 +1,8 @@
+.env
+.gitignore
+doc_retrieval_qa/autorag/
+doc_retrieval_qa/data/
+*.ipynb
+*.drawio
+*.html
+doc_retrieval_qa/milvus/

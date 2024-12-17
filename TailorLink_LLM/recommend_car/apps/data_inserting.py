@@ -9,7 +9,7 @@ from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.chunking_strategy import RegexChunking
 from pydantic import BaseModel, Field
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from transformers import AutoModel, AutoTokenizer
 from recommend_car.apps.database.milvus_connector import (
     MILVUS_DB_NAME,
@@ -20,7 +20,7 @@ from recommend_car.apps.database.milvus_connector import (
 )
 from recommend_car.apps.utils import find_matching_car_id
 
-load_dotenv()
+# load_dotenv()
 
 # KoBERT 모델 및 토크나이저 초기화
 model = AutoModel.from_pretrained("monologg/kobert")

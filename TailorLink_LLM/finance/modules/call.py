@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-load_dotenv()
+# load_dotenv()
 
 # 상수 정의
 class MessageRole:

@@ -1,7 +1,7 @@
 from langchain.tools import tool
 from doc_retrieval_qa.RAG.tools.milvus_search import dense_search, hybrid_search, sparse_search
 from doc_retrieval_qa.RAG.llm.embedding import generate_query_embedding
-from common.milvus_connector import get_collection
+from core.milvus_connector import get_collection
 
 
 @tool

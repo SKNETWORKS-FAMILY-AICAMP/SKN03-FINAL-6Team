@@ -1,5 +1,5 @@
 # from rag_pipeline import run_rag
-from common.milvus_connector import connect_to_milvus
+from core.milvus_connector import connect_to_milvus
 from rag_pipeline import process_pdf_and_store, run_rag
 if __name__ == "__main__":
     # Milvus 연결 초기화

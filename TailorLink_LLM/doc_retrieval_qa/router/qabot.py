@@ -13,10 +13,8 @@ import asyncio
 from fastapi.responses import StreamingResponse
 
 from doc_retrieval_qa.RAG.rag_pipeline import run_rag
-from common.milvus_connector import connect_to_milvus
+from core.milvus_connector import connect_to_milvus
 manual_qa_router = APIRouter()
-
-connect_to_milvus()
 
 conversation_memory = {}
 SESSION_EXPIRY_SECONDS = 3600
@@ -28,6 +26,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None)
     user_input: str = Field(...)
+    car_id: int = Field(...)
 
 class ChatResponse(BaseModel):
     response: str = Field(..., description="AI의 최종 응답 텍스트")
@@ -64,6 +63,7 @@ def cleanup_sessions():
 
 @manual_qa_router.post("/manual_qa", response_model=ChatResponse)
 async def chat(chat_request: ChatRequest):
+    connect_to_milvus()
     session_id = chat_request.session_id or generate_session_id()
     user_input = chat_request.user_input
 

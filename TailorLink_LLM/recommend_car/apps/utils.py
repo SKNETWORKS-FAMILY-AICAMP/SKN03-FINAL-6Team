@@ -3,8 +3,8 @@ import logging
 
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from recommend_car.apps.db import get_connection
-load_dotenv()
+from core.mysql_connctor import get_connection
+# load_dotenv()
 
 logging.basicConfig(
     level=logging.DEBUG,  

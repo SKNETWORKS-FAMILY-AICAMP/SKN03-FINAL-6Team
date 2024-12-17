@@ -8,7 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from recommend_car.apps.routers import chatbot
 # from recommend_car.apps.data_update_crawling import update_car_models
 from doc_retrieval_qa.router import qabot
+from core.ssmparam import loadenv
 
+#환경 변수 설정
+loadenv()
 
 logging.basicConfig(
     level=logging.DEBUG,  

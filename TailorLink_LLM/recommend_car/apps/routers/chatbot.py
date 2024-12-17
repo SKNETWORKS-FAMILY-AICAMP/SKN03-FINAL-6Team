@@ -120,7 +120,7 @@ async def chat(chat_request: ChatRequest):
     return ChatResponse(
         response=ai_response,
         session_id=session_id,
-        agent=agent_id,
+        agent_id=agent_id,
         response_type=response_type,
         page_info=page_info,
         suggest_question=suggest_question,
