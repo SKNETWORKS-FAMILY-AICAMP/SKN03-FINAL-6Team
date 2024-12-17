@@ -40,12 +40,25 @@ def load_memorizer(state: state) -> state:
     
     return state
 
-# 여기 부분 작성중
-# def load_memories(state : state) -> state:
+
+def load_memories(state : state) -> state:
     
-#     print("---메모리를 불러오는 중 입니다.---")
+    print("---메모리를 불러오는 중 입니다.---")
+    """Load memories for the current conversation.
+
+    Args:
+        state (schemas.State): The current state of the conversation.
+        config (RunnableConfig): The runtime configuration for the agent.
+
+    Returns:
+        State: The updated state with loaded memories.
+    """
+    convo_str = get_buffer_string(state["messages"])
+    convo_str = tokenizer.decode(tokenizer.encode(convo_str)[:2048])
+    recall_memories = search_recall_memories.invoke(convo_str, config)
     
-#     return state
+    
+    return state
 
 
 
