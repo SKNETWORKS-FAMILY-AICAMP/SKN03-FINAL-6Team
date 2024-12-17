@@ -1,0 +1,56 @@
+/* Sidebar.css */
+.board-sidebar {
+  width: 200px;
+  background: #f9f9f9;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.write-btn {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  font-family: 'Noto Sans', sans-serif;
+  cursor: pointer;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-list li {
+  margin-bottom: 10px;
+}
+
+.sidebar-link {
+  text-decoration: none;
+  color: #333;
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 14px;
+  transition: color 0.2s ease;
+  display: block;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.sidebar-link:hover {
+  color: #007bff;
+}
+
+/* 방문, 클릭 상태 제거 */
+.sidebar-link:visited,
+.sidebar-link:active {
+  color: #333;
+}
+
+/* 활성화 상태 스타일: 배경 제거, 글자색 파란색, 굵게 표시 */
+.sidebar-link.active {
+  background: none;
+  color: #007bff;
+  font-weight: bold;
+}
