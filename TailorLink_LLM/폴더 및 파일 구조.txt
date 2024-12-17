@@ -1,0 +1,29 @@
+my_fastapi_project/
+├── app/                             # 메인 앱 디렉토리
+│   ├── __init__.py                  # 패키지 초기화
+│   ├── main.py                      # FastAPI 엔트리 포인트
+│   ├── core/                        # 공통 설정 및 유틸리티
+│   │   ├── __init__.py
+│   │   ├── config.py                # 환경 변수 및 설정
+│   │   ├── config.py                # 환경 변수 및 설정
+│   │   ├── lifespan.py              # fastapi 생명주기
+│   │   ├── ssmparma.py              # aws 파라미터 스토어
+│   │
+│   ├── database/                    # 데이터베이스 관련
+│   │   ├── __init__.py
+│   │   ├── mysql.py                 # mysql DB 연결 및 초기화
+│   │   ├── milvus.py                # milvus DB 연결 및 초기화
+│   │
+│   ├── features/                    # 기능별 디렉토리
+│   │   ├── car_recommendation/      # 차량 추천 기능
+│   │   ├── manual/                  # 매뉴얼 Q&A 기능
+│   │
+│   ├── utils/                       # 공통 유틸리티
+│   │   ├── __init__.py
+│   │   ├── session_manager.py       # 세션 관리
+├── requirements.txt                 # Python 의존성
+├── Dockerfile                       # Docker 설정
+├── .gitignore                       # Git 제외 파일
+├── .dockerignore                    # 도커 제외 파일
+├── buildspec.yml
+

@@ -6,3 +6,4 @@ doc_retrieval_qa/data/
 *.drawio
 *.html
 doc_retrieval_qa/milvus/
+__pycache__/

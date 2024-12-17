@@ -20,7 +20,6 @@ RUN pip3 install --no-cache-dir --upgrade pip
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
 #RUN pip3 install --no-cache-dir uvicorn
 
-
 ENV PYTHONPATH=/app
 
 # 실행 포트 정의 
