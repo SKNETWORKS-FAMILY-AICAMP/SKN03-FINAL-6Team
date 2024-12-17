@@ -1,148 +1,98 @@
-from pymilvus import connections, Collection, utility, FieldSchema, CollectionSchema, DataType, MilvusClient
-from transformers import AutoModel, AutoTokenizer
+from pymilvus import MilvusClient
 from recommend_car.apps.ssmparam import get_ssm_parameter
-from recommend_car.apps.utils import find_matching_car_id
-import torch
 
 # Milvus 연결 정보
 MILVUS_URI = get_ssm_parameter('/tailorlink/milvus/MILVUS_URI')
 MILVUS_TOKEN = get_ssm_parameter('/tailorlink/milvus/MILVUS_TOKEN')
 MILVUS_DB_NAME = 'tailorlink'
-MILVUS_ALIAS = 'tailorlink'
 
-# KoBERT 모델 초기화
-model = AutoModel.from_pretrained("monologg/kobert")
-tokenizer = AutoTokenizer.from_pretrained("monologg/kobert", trust_remote_code=True)
-
-def connect_to_milvus():
-    """
-    Milvus 서버 연결
-    """
-    try:
-        print(f"Connecting to Milvus at {MILVUS_URI}")
-        connections.connect(
-            alias=MILVUS_ALIAS,
-            uri=MILVUS_URI,
-            db_name=MILVUS_DB_NAME,
-            token=MILVUS_TOKEN
-        )
-        print(f"Connected to Milvus database: {MILVUS_DB_NAME}")
-    except Exception as e:
-        print(f"Error connecting to Milvus: {e}")
-        raise
-
+# MilvusClient 생성
+client = MilvusClient(uri=MILVUS_URI, token=MILVUS_TOKEN)
 
 def create_milvus_collection(collection_name):
     """
     Milvus 컬렉션 생성 (Dynamic Field 활성화)
     """
     try:
-        if utility.has_collection(collection_name, using=MILVUS_ALIAS):
-            Collection(collection_name).drop()
+        if client.has_collection(collection_name):
+            print(f"기존 컬렉션 '{collection_name}' 삭제 중...")
+            client.drop_collection(collection_name)
 
-        fields = [
-            FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, auto_id=True, max_length=100),
-            FieldSchema(name="car_id", dtype=DataType.INT32),
-            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=768),
-        ]
-        schema = CollectionSchema(fields, dimentions=4, description="Dynamic Field enabled collection", enable_dynamic_field=True)
-        Collection(name=collection_name, schema=schema, using=MILVUS_ALIAS)
-        print(f"Collection '{collection_name}' created with Dynamic Field enabled.")
+        client.create_collection(
+            collection_name=collection_name,
+            dimension=768,  # 벡터 차원
+            primary_field="id",
+            enable_dynamic_field=True  # Dynamic Field 활성화
+        )
+        print(f"컬렉션 '{collection_name}'이 생성되었습니다.")
     except Exception as e:
         print(f"Error creating collection: {e}")
         raise
-
-
-def create_index(collection_name):
+    
+def insert_initial_data(collection_name, car_id, embedding, metadata):
     """
-    Milvus 인덱스 생성
+    Milvus에 초기 데이터 삽입 (Dynamic Fields 포함)
     """
     try:
-        collection = Collection(collection_name, using=MILVUS_ALIAS)
-        index_params = {
-            "index_type": "IVF_FLAT",  # 효율적인 검색을 위한 기본 인덱스
-            "metric_type": "L2",
-            "params": {"nlist": 128}
-        }
-        collection.create_index(field_name="embedding", index_params=index_params)
-        print(f"Index created for collection '{collection_name}'")
+        data = [{
+            "car_id": car_id,
+            "embedding": embedding,
+            **metadata  # 동적 필드 추가
+        }]
+        client.insert(collection_name=collection_name, data=data)
+        print(f"초기 데이터가 컬렉션 '{collection_name}'에 삽입되었습니다. car_id: {car_id}")
     except Exception as e:
-        print(f"Error creating index: {e}")
+        print(f"Error inserting initial data into Milvus: {e}")
         raise
 
-
-def load_collection(collection_name):
+def update_dynamic_fields(collection_name, search_condition, new_dynamic_fields):
     """
-    컬렉션 메모리 로드
-    """
-    try:
-        collection = Collection(collection_name, using=MILVUS_ALIAS)
-        collection.load()
-        print(f"Collection '{collection_name}' is loaded into memory.")
-    except Exception as e:
-        print(f"Error loading collection: {e}")
-        raise
-
-
-def save_to_milvus(collection_name, embedding, metadata):
-    """
-    Milvus에 데이터 저장 (Dynamic Field 사용)
+    Dynamic Fields를 업데이트 (기존 레코드 삭제 후 재삽입)
     """
     try:
-        collection = Collection(collection_name, using=MILVUS_ALIAS)
-        car_id = find_matching_car_id(metadata.get("car_name", ""))
-        if not car_id:
-            print(f"'{metadata.get("car_name", "")}'에 해당하는 car_id를 찾을 수 없습니다. 저장을 건너뜁니다.")
+        # 기존 레코드 조회
+        results = client.query(
+            collection_name=collection_name,
+            expr=search_condition,
+            output_fields=["*"]  # 모든 필드 반환
+        )
+        if not results:
+            print("조건에 맞는 레코드가 없습니다.")
             return
-        # 데이터 삽입
-        entities = [    
-            [car_id],
-            [embedding],
-            [{"car_name": metadata.get("car_name", ""),
-            "car_info": metadata.get("car_info", ""),
-            "keywords": metadata.get("keywords", {}),
-            "page": metadata.get("page", 0)}]
-        ]   
-        
-        # Dynamic Field 데이터 삽입
-        if metadata:
-            collection.insert(entities)
-            print(f"Data stored in Milvus collection '{collection_name}' with metadata: {metadata}")
-        else:
-            collection.insert(entities)
-            print(f"Data stored in Milvus collection '{collection_name}' without metadata.")
+
+        # 기존 데이터 확장
+        for record in results:
+            updated_record = {
+                "car_id": record["car_id"],
+                "embedding": record["embedding"],
+                **record.get("$meta", {}),  # 기존 Dynamic Field 복사
+                **new_dynamic_fields       # 추가할 Dynamic Field
+            }
+            # 기존 레코드 삭제
+            client.delete(collection_name=collection_name, expr=search_condition)
+
+            # 새로운 레코드 삽입
+            client.insert(collection_name=collection_name, data=[updated_record])
+            print(f"레코드 업데이트 완료: {updated_record}")
     except Exception as e:
-        print(f"Error saving to Milvus: {e}")
+        print(f"Dynamic Field 업데이트 중 오류 발생: {e}")
         raise
 
-def search_in_milvus(collection_name, query_text, top_k=5):
+def search_in_milvus(collection_name, query_embedding, top_k=5):
     """
-    Milvus에서 검색 (Dynamic Field 포함)
+    Milvus에서 유사도 검색 수행
     """
     try:
-        collection = Collection(collection_name, using=MILVUS_ALIAS)
-
-        # 검색할 텍스트 임베딩 생성
-        inputs = tokenizer(
-            query_text, return_tensors="pt", padding=True, truncation=True, max_length=tokenizer.model_max_length
-        )
-        with torch.no_grad():
-            outputs = model(**inputs)
-        query_embedding = outputs.last_hidden_state[:, 0, :].squeeze(0).tolist()
-
-        # 검색 실행
-        search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
-        results = collection.search(
+        results = client.search(
+            collection_name=collection_name,
             data=[query_embedding],
-            anns_field="embedding",
-            param=search_params,
-            limit=top_k
+            limit=top_k,
+            anns_field="vector",
+            output_fields=["*"]  # 모든 필드 반환
         )
-
-        # 결과 출력
         for hits in results:
             for hit in hits:
-                print(f"ID: {hit.id}, Metadata: {hit.entity}")
+                print(f"ID: {hit['id']}, Fields: {hit}")
         return results
     except Exception as e:
         print(f"Error searching in Milvus: {e}")

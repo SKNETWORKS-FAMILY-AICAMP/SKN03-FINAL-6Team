@@ -12,12 +12,13 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from transformers import AutoModel, AutoTokenizer
 from recommend_car.apps.database.milvus_connector import (
-    connect_to_milvus,
+    MILVUS_DB_NAME,
     create_milvus_collection,
-    save_to_milvus,
-    create_index,
-    load_collection
+    insert_to_milvus,
+    update_dynamic_fields,
+    search_in_milvus
 )
+from recommend_car.apps.utils import find_matching_car_id
 
 load_dotenv()
 
@@ -124,15 +125,13 @@ async def summarize_and_store_url(url, save_to_db):
             }
             # KoBERT 임베딩 생성
             embedding = generate_kobert_embedding(text)
-
+            car_id = find_matching_car_id()
             # Milvus에 저장
-            connect_to_milvus()
-            create_milvus_collection("genesis_cars")
-            save_to_milvus("genesis_cars", embedding=embedding, metadata=metadata)  # 수정된 매개변수
+            create_milvus_collection(MILVUS_DB_NAME)
+            insert_to_milvus(MILVUS_DB_NAME, )
 
             # 데이터 삽입 후 인덱스 생성 및 컬렉션 로드
-            create_index("genesis_cars")
-            load_collection("genesis_cars")
+            
             output += "\n\n**DB에 저장되었습니다.**"
 
         return output
