@@ -56,5 +56,6 @@ class Settings(BaseSettings):
         # OPENAI_API_KEY를 os.environ에 추가
         if 'OPENAI_API_KEY' not in os.environ:
             os.environ['OPENAI_API_KEY'] = self.OPENAI_API_KEY
+
 # 설정 객체 생성
 settings = Settings()

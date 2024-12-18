@@ -1,6 +1,5 @@
-from langchain.chat_models import ChatOpenAI
 from langchain_ollama import ChatOllama
-
+from langchain_openai import ChatOpenAI
 # 공통 LLM 설정
 DEFAULT_TEMPERATURE = 0.0
 

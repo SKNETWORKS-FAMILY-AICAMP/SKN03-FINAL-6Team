@@ -1,4 +1,4 @@
-my_fastapi_project/
+TailorLink_LLM/
 ├── app/                             # 메인 앱 디렉토리
 │   ├── __init__.py                  # 패키지 초기화
 │   ├── main.py                      # FastAPI 엔트리 포인트
@@ -17,6 +17,7 @@ my_fastapi_project/
 │   ├── features/                    # 기능별 디렉토리
 │   │   ├── car_recommendation/      # 차량 추천 기능
 │   │   ├── manual/                  # 매뉴얼 Q&A 기능
+│   │   ├── finance/
 │   │
 │   ├── utils/                       # 공통 유틸리티
 │   │   ├── __init__.py

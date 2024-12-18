@@ -1,20 +1,20 @@
 from click import prompt
 
-from app.features.manual.RAG.types import State
+from app.features.manual.utils.types import State
 from langgraph.graph import START, END
-from app.features.manual.RAG.llm.prompt_templates import *
-from app.features.manual.RAG.llm.model import get_OpenAI, get_ollama
+from app.features.manual.models.prompt_templates import *
+from app.features.manual.models.model import create_openai_model, create_ollama_model
 from langchain_core.output_parsers import StrOutputParser
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from app.features.manual.RAG.tools.tools import search_milvus
+from app.features.manual.tools.tools import search_milvus
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 import ast
 
 # 제네시스 관련 질문 판단 노드 함수
 def genesis_check(state: State):
     print('판단 시작')
-    prompt = get_genesis_manual_classification_prompt()
-    llm = get_OpenAI()
+    prompt = create_genesis_classification_prompt()
+    llm = create_openai_model()
 
     chain = prompt | llm | StrOutputParser()
     response = chain.invoke({"question":state['message']})
@@ -39,8 +39,8 @@ def vector_search(state: State) -> State:
     state['previous_question'].append(query)
 
     context = search_milvus(query)
-    prompt = get_answer_with_context_prompt()
-    llm = get_OpenAI()
+    prompt = create_context_based_answer_prompt()
+    llm = create_openai_model()
 
     chain = prompt | llm | StrOutputParser()
 
@@ -70,8 +70,8 @@ def calculate_score(state: State):
     # 응답 스키마를 기반으로 한 구조화된 출력 파서 초기화
     output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
 
-    prompt = get_score_answer_prompt()
-    llm = get_OpenAI()
+    prompt = create_answer_evaluation_prompt()
+    llm = create_openai_model()
 
     chain = prompt | llm | output_parser
 
@@ -99,8 +99,8 @@ def calculate_score_conditional(state: State):
 # 질문 쿼리 변경 노드 함수
 def query_rewrite(state: State) -> State:
     print('쿼리변경')
-    prompt = get_rewrite_query_prompt()
-    llm = get_OpenAI()
+    prompt = create_query_rewrite_prompt()
+    llm = create_openai_model()
     previous = state['previous_question']
     query = state['message']
 
@@ -114,8 +114,8 @@ def query_rewrite(state: State) -> State:
 
 # 질문 분리 노드 함수
 def query_split(state: State) -> State:
-    prompt = get_split_question_prompt()
-    llm = get_ollama('linkbricks-8B')
+    prompt = create_question_split_prompt()
+    llm = create_ollama_model('linkbricks-8B')
     chain = prompt | llm | StrOutputParser()
 
     query = state['message']
