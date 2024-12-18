@@ -7,6 +7,31 @@ import os
 from dotenv import load_dotenv
 
 
+# 임시 코드
+from typing_extensions import Annotated, Sequence, TypedDict
+from langchain.schema import BaseMessage
+
+# 헤더 모델 정의
+class ToolHeaders(BaseModel):
+    Authorization: str
+    Content_Type: str
+    
+class Vehicle(BaseModel):
+    brand: str = ""  # 기본값 설정
+    model: str = ""
+    date: int = 0
+    year: str = ""
+    detail: str = ""
+    option: str = ""
+
+class State(BaseModel):
+    headers : dict
+    vehicle: Vehicle
+    messages: Annotated[Sequence[BaseMessage], "add_messages"]
+    ask_human: bool
+
+
+
 load_dotenv()
 
 access_token = os.getenv("CODEF_ACCESS_TOKEN")
@@ -26,7 +51,7 @@ class HumanRequest(BaseModel):
 
 # 1. 제조사 목록 조회 함수
 @tool("get_brand_list", return_direct=True)
-def get_brand_list_tool(tool_input: dict) -> dict:
+def get_brand_list_tool(State: dict) -> dict:
     """
     자동차 제조사 목록을 조회하는 함수입니다.
 
@@ -36,9 +61,10 @@ def get_brand_list_tool(tool_input: dict) -> dict:
     Returns:
         dict: 제조사 목록 JSON 데이터.
     """
-    headers = tool_input["headers"]  # headers 추출
+    headers = State.headers # headers 추출
+    print(tool_input.headers)
     url = "https://api.codef.io/v1/kr/car/brand-list"
-    response = requests.get(url, headers=headers)
+    response = requests.get(url=url, headers=headers)
     
     if response.status_code == 200:
         try:
@@ -63,8 +89,8 @@ def get_model_list_tool(tool_input: dict) -> dict:
     Returns:
         dict: 모델 목록 JSON 데이터.
     """
-    headers = tool_input["headers"]
-    brand_code = tool_input["brand_code"]
+    headers = tool_input.headers
+    brand_code = tool_input.brand_code
     
     brand_code_encode = urllib.parse.quote(brand_code)
     url = f"https://api.codef.io/v1/kr/car/model-list?brand={brand_code_encode}"
@@ -95,9 +121,9 @@ def get_year_list_tool(tool_input: dict) -> dict:
     Returns:
         dict: 연식 목록 JSON 데이터.
     """
-    headers = tool_input["headers"]
-    brand_code = tool_input["brand_code"]
-    start_date = tool_input["start_date"]
+    headers = tool_input.headers
+    brand_code = tool_input.brand_code
+    start_date = tool_input.start_date
     
     brand_code_encode = urllib.parse.quote(brand_code)
     model_code_encode = urllib.parse.quote(model_code)
@@ -130,10 +156,10 @@ def get_detail_list_tool(tool_input: dict) -> dict:
     Returns:
         dict: 상세 차량명 목록 JSON 데이터.
     """
-    headers = tool_input["headers"]
-    brand_code = tool_input["brand_code"]
-    model_code = tool_input["model_code"]
-    year_code = tool_input["year_code"]
+    headers = tool_input.headers
+    brand_code = tool_input.brand_code
+    model_code = tool_input.model_code
+    year_code = tool_input.year_code
 
     
     brand_code_encode = urllib.parse.quote(brand_code)
@@ -168,11 +194,11 @@ def get_option_list_tool(tool_input: dict) -> dict:
     Returns:
         dict: 옵션 목록 JSON 데이터.
     """
-    headers = tool_input["headers"]
-    brand_code = tool_input["brand_code"]
-    model_code = tool_input["model_code"]
-    year_code = tool_input["year_code"]
-    detail_code = tool_input["detail_code"] 
+    headers = tool_input.headers
+    brand_code = tool_input.brand_code
+    model_code = tool_input.model_code
+    year_code = tool_input.year_code
+    detail_code = tool_input.detail_code
     
     
     brand_code_encode = urllib.parse.quote(brand_code)
