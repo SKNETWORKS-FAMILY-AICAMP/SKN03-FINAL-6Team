@@ -1,10 +1,8 @@
-import sys
 import os
 import json
 import asyncio
 import gradio as gr
 import pyperclip
-import torch
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from crawl4ai.chunking_strategy import RegexChunking
@@ -12,11 +10,10 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from transformers import AutoModel, AutoTokenizer
 from recommend_car.apps.database.milvus_connector import (
-    MILVUS_DB_NAME,
+    client,
+    generate_kobert_embedding,
     create_milvus_collection,
-    insert_to_milvus,
-    update_dynamic_fields,
-    search_in_milvus
+    insert_or_update_data
 )
 from recommend_car.apps.utils import find_matching_car_id
 
@@ -29,6 +26,7 @@ tokenizer = AutoTokenizer.from_pretrained("monologg/kobert", trust_remote_code=T
 # 제네시스 차량 정보를 저장할 데이터 모델 정의
 class GenesisCarInfo(BaseModel):
     car_name: str = Field(..., description="차량명")
+    car_image: str = Field(..., description="차량 이미지 url")
     car_info: str = Field(..., description="차량 정보")
     car_review: str = Field(..., description="차량 리뷰")
     keywords: list = Field(..., description="페이지에 할당된 키워드 목록")
@@ -42,19 +40,26 @@ extraction_strategy = LLMExtractionStrategy(
     apply_chunking=False,
     instruction=(
         """
-        크롤링한 내용을 다음 세부 정보로 정리하고, 한국어로 번역하여 Markdown 형식으로 작성하세요:
-        리뷰내용은 근데 조금 더 많이 나타내주세요.
+        크롤링한 내용을 다음 세부 정보로 정리하고, 한국어로 번역하여 Markdown 형식으로 작성하세요.
+        리뷰 내용을 최대한 자세하게 작성하고, 사용자의 실제 경험과 의견을 포함한 풍부한 내용을 제공하세요.
 
         ### 차량명
-        차량명 내용
+        차량명 내용을 간결하게 작성하세요.
+        
+        ### 차량이미지
+        차량 이미지 url을 받아오세요.
 
         ### 차량 정보
-        차량 정보 내용
+        차량에 대한 기본 정보를 명확하게 나열하세요.
 
         ### 차량 리뷰
-        차량 리뷰 내용
+        리뷰 내용을 가능한 한 많이 작성하세요.  
+        - 긍정적 리뷰와 부정적 리뷰를 모두 포함하세요.  
+        - 차량의 성능, 디자인, 기능, 사용자 경험 등 다양한 관점에서 리뷰를 작성하세요.  
+        - 사용자의 직접 경험과 구체적인 예시를 활용해 풍부한 정보를 제공하세요.
 
         ### 키워드 목록
+        크롤링한 내용을 기반으로 차량과 관련된 키워드를 나열하세요.
         - 키워드1
         - 키워드2
         - 키워드3
@@ -62,16 +67,6 @@ extraction_strategy = LLMExtractionStrategy(
     )
 )
 
-# 임베딩 생성 함수
-def generate_kobert_embedding(text):
-    """
-    KoBERT를 사용하여 텍스트 임베딩 생성
-    """
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    embedding = outputs.last_hidden_state[:, 0, :].squeeze(0)  # [CLS] 토큰 사용
-    return embedding.tolist()
 
 # 비동기 크롤링 및 요약 함수
 async def crawl_and_summarize(url):
@@ -104,6 +99,7 @@ async def summarize_and_store_url(url, save_to_db):
         # 요약 결과 생성
         output = (
             f"**차량명:** {data['car_name']}\n\n"
+            f"**차량이미지:** {data['car_image']}\n\n"
             f"**차량 정보:** {data['car_info']}\n\n"
             f"**차량 리뷰:** {data['car_review']}\n\n"
             f"**키워드:** {', '.join(data['keywords'])}"
@@ -113,25 +109,35 @@ async def summarize_and_store_url(url, save_to_db):
         if save_to_db:
             text = (
                 f"차량명: {data['car_name']}\n"
+                f"차량이미지: {data['car_image']}\n"
                 f"차량 정보: {data['car_info']}\n"
                 f"차량 리뷰: {data['car_review']}\n"
                 f"키워드: {', '.join(data['keywords'])}"
             )
             metadata = {
                 "car_name": data["car_name"],
+                "car_image": data["car_image"],
                 "car_info": data["car_info"],
                 "car_review": data["car_review"],
                 "keywords": data["keywords"]
             }
             # KoBERT 임베딩 생성
             embedding = generate_kobert_embedding(text)
-            car_id = find_matching_car_id()
-            # Milvus에 저장
-            create_milvus_collection(MILVUS_DB_NAME)
-            insert_to_milvus(MILVUS_DB_NAME, )
 
-            # 데이터 삽입 후 인덱스 생성 및 컬렉션 로드
-            
+            # car_id 찾기
+            car_id = find_matching_car_id(data["car_name"])
+            if not car_id:
+                print("car_id를 찾을 수 없습니다. 저장을 건너뜁니다.")
+                return output
+
+            # Milvus 컬렉션 준비
+            collection_name = "genesis"
+            if not client.has_collection(collection_name):  # 존재하지 않으면 컬렉션 생성
+                create_milvus_collection(collection_name)
+
+            # Milvus에 데이터 삽입/업데이트
+            insert_or_update_data(collection_name, car_id, embedding, metadata)
+
             output += "\n\n**DB에 저장되었습니다.**"
 
         return output
