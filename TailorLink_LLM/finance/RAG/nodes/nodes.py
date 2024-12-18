@@ -7,12 +7,15 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 from RAG.database.database import faiss_db
 from RAG.tools.memory_tools import *
+from langgraph.prebuilt import ToolNode, tool_node, tools_condition
 
 llm = get_OpenAI()
 output_parser = StrOutputParser()
 
 # memory tools
-tools = [save_recall_memory, search_recall_memories]
+tools = [save_recall_memory, search_recall_memories, get_brand_list, get_model_list, get_year_list, get_detail_list, get_option_list]
+
+tool_node = ToolNode(tools)
 
 def load_memorizer(state: state) -> state:
     
@@ -41,24 +44,25 @@ def load_memorizer(state: state) -> state:
     return state
 
 
-def load_memories(state : state) -> state:
+# 잠시 대기
+# def load_memories(state : state) -> state:
     
-    print("---메모리를 불러오는 중 입니다.---")
-    """Load memories for the current conversation.
+#     print("---메모리를 불러오는 중 입니다.---")
+#     """Load memories for the current conversation.
 
-    Args:
-        state (schemas.State): The current state of the conversation.
-        config (RunnableConfig): The runtime configuration for the agent.
+#     Args:
+#         state (schemas.State): The current state of the conversation.
+#         config (RunnableConfig): The runtime configuration for the agent.
 
-    Returns:
-        State: The updated state with loaded memories.
-    """
-    convo_str = get_buffer_string(state["messages"])
-    convo_str = tokenizer.decode(tokenizer.encode(convo_str)[:2048])
-    recall_memories = search_recall_memories.invoke(convo_str, config)
+#     Returns:
+#         State: The updated state with loaded memories.
+#     """
+#     convo_str = get_buffer_string(state["messages"])
+#     convo_str = tokenizer.decode(tokenizer.encode(convo_str)[:2048])
+#     recall_memories = search_recall_memories.invoke(convo_str, config)
     
     
-    return state
+#     return state
 
 
 
