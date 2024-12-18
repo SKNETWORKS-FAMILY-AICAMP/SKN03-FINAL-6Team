@@ -5,7 +5,6 @@ from difflib import SequenceMatcher
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 from recommend_car.apps.db import get_connection
-from pymilvus import WeightedRanker, RRFRanker
 load_dotenv()
 
 logging.basicConfig(

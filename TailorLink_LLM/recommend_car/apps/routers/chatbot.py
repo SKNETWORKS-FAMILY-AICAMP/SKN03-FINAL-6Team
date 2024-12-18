@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from recommend_car.apps.workflow import build_car_recommendation_workflow
-from recommend_car.apps.agent_state import AgentState
+from recommend_car.apps.agent_state import AgentState  # AgentState 추가
 
 car_recommend_router = APIRouter()
 
@@ -48,17 +48,36 @@ async def chat(chat_request: ChatRequest):
     try:
         # 워크플로우 실행
         workflow = build_car_recommendation_workflow()
-        workflow_result = workflow.invoke({"user_input": user_input}, config={"configurable": {"thread_id": session_id}})
+
+        # 초기 상태 생성
+        initial_state: AgentState = {
+            "user_input": user_input,
+            "generated_query": None,
+            "db_result": [],
+            "milvus_result": [],
+            "final_result": [],
+            "response": "",
+            "suggested_questions": [],
+            "page_info": {},
+            "input_filtered": False,  
+            "search_exhausted": False 
+        }
+
+        # 워크플로우 실행 및 상태 갱신
+        workflow_result: AgentState = workflow.invoke(
+            initial_state,
+            config={"configurable": {"thread_id": session_id}}
+        )
 
         # 결과 처리
-        response = workflow_result.get("response", "조건에 맞는 차량을 찾을 수 없습니다.")
+        response = workflow_result["response"]
         final_results = workflow_result.get("final_result", [])
 
         # page_info 할당
         if final_results:
             top_result = final_results[0]
             page_info = {
-                "car_id": top_result.get("car_id", ""),
+                "car_id": str(top_result.get("car_id", "")),
                 "car_name": top_result.get("car_name", ""),
                 "car_image": top_result.get("car_image", "")
             }
@@ -68,7 +87,7 @@ async def chat(chat_request: ChatRequest):
         response_type = "ai"
 
     except Exception as e:
-        logging.error(f"Chat 요청 처리 중 오류 발생: {e}")
+        logging.error(f"[ERROR] Chat 요청 처리 중 오류 발생: {e}", exc_info=True)
 
     return ChatResponse(
         response=response,
@@ -79,4 +98,3 @@ async def chat(chat_request: ChatRequest):
         suggest_question=suggest_question,
         timestamp=timestamp
     )
-
