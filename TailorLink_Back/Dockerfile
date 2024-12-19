@@ -12,7 +12,7 @@ COPY ./src $APP_HOME/src
 RUN ./gradlew clean build -x test
 
 # 실행 단계
-FROM openjdk:17.0.13-jdk
+FROM openjdk:17-jdk
 ENV APP_HOME=/apps
 WORKDIR $APP_HOME
 
