@@ -6,9 +6,10 @@
 </head>
 <body>
 <div class = "layout">
-    <form th:action="@{/board/update/{board_id}(board_id=${board.board_id})}" method="post">
+    <form th:action="@{/v1/board/update/{board_id}(board_id=${board.board_id})}" method="post">
         <input name = "title" type = "text" th:value="${board.title}">
         <p th:text="${board.author}"> </p>
+        <input type="hidden" name="author" th:value="${board.author}">
         <textarea name = "content" th:text="${board.content}"></textarea>
         <button name = "submit">수정</button>
     </form>
