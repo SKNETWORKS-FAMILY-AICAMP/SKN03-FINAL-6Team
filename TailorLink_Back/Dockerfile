@@ -1,5 +1,4 @@
-# 빌드 단계
-FROM eclipse-temurin:23-jdk AS build
+FROM gradle:8.11.1-jdk17-alpine as build
 ENV APP_HOME=/apps
 WORKDIR $APP_HOME
 
@@ -13,7 +12,7 @@ COPY ./src $APP_HOME/src
 RUN ./gradlew clean build -x test
 
 # 실행 단계
-FROM eclipse-temurin:23-jre
+FROM openjdk:17.0.13-jdk
 ENV APP_HOME=/apps
 WORKDIR $APP_HOME
 
