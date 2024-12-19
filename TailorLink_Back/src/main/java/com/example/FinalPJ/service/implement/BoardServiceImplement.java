@@ -91,6 +91,8 @@ public class BoardServiceImplement implements BoardService {
         board.setContent(boardDTO.getContent());
         board.setCreatetime(boardDTO.getCreatetime() == null ? LocalDateTime.now() : boardDTO.getCreatetime());
 
+        board.setAuthor(board.getAuthor());
+
         // 3. 저장
         boardRepository.save(board);
 

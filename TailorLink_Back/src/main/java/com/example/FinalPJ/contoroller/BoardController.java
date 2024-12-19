@@ -16,8 +16,11 @@ import java.util.List;
 @Controller
 @RequestMapping("/v1/board")
 public class BoardController {
-    @Autowired
-    private BoardService boardService;
+    private final BoardService boardService;
+
+    public BoardController(BoardService boardService) {
+        this.boardService = boardService;
+    }
 
     @GetMapping("/write")
     public String boardWriteForm() {
@@ -68,14 +71,8 @@ public class BoardController {
             return "boardmodify"; // 수정 페이지로 다시 이동
         }
 
-        // ResponseEntity에서 실제 BoardDTO를 추출
-        BoardDTO boardTemp = boardService.boardView(board_id).getBody();
-
-        if (boardTemp != null) {
-            boardTemp.setTitle(boardDTO.getTitle());
-            boardTemp.setContent(boardDTO.getContent());
-            boardService.boardWrite(boardTemp);
-        }
+        // 수정 로직 호출
+        boardService.boardUpdate(board_id, boardDTO);
 
         return "redirect:/v1/board/list";
     }
