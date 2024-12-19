@@ -1,0 +1,199 @@
+/* Board.css */
+.board-container {
+    display: flex;
+    width: 100%;
+    /* height: 100vh;  제거 */
+    box-sizing: border-box;
+  }
+  
+  .board-sidebar {
+    width: 200px;
+    background: #f9f9f9;
+    border-right: 1px solid #ddd;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .write-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+  
+  .menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .menu-list li {
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  
+  .board-main {
+    flex: 1;
+    position: relative;
+    background: #fff;
+    padding: 40px;
+    box-sizing: border-box;
+  }
+  
+  .board-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .board-search {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
+  
+  .board-search input {
+    width: 200px;
+    padding: 5px;
+    margin-right: 5px;
+    box-sizing: border-box;
+    border-radius: 5px;
+  }
+  
+  .board-list {
+    margin-top: 20px;
+    /* overflow:auto; 제거 */
+    /* max-height: calc(100vh - 250px); 제거 */
+  }
+  
+  .board-item {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-sizing: border-box;
+    background: #fafafa;
+    border-radius: 10px;
+  }
+  
+  .board-item-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .board-item-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .board-item-body p {
+    margin: 5px 0;
+    font-size: 16px;
+  }
+  
+  .board-item-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+  
+  .board-item-actions button {
+    margin: 5px 0;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  /* 페이지네이션 스타일 */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  
+  .pagination button {
+    padding: 5px 10px;
+    border:none;
+    background:#ddd;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  
+  .pagination button:disabled {
+    background:#eee;
+    cursor: not-allowed;
+  }
+  
+  .pagination span {
+    line-height:2.5em;
+    font-size:14px;
+  }
+  
+  /* 모달 스타일 */
+  .modal-overlay {
+    position: fixed;
+    top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+  }
+  
+  .modal-content {
+    background:#fff;
+    padding:50px;
+    border-radius:10px;
+    width:600px;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  
+  .modal-content h2 {
+    margin-top:0;
+    margin-bottom:20px;
+    text-align:center;
+  }
+  
+  .form-group {
+    display:flex;
+    flex-direction:column;
+    margin-bottom:10px;
+  }
+  
+  .form-group label {
+    font-size:14px;
+    margin-bottom:5px;
+  }
+  
+  .form-group input, .form-group textarea {
+    padding:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-size:14px;
+  }
+  
+  .form-group textarea {
+    resize:none;
+    height:80px;
+  }
+  
+  .modal-buttons {
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+  }
+  
+  .modal-buttons button {
+    padding:5px 10px;
+    border:none;
+    background:#ddd;
+    cursor:pointer;
+    border-radius:5px;
+  }
+  
+  .modal-buttons button:hover {
+    background:#ccc;
+  }

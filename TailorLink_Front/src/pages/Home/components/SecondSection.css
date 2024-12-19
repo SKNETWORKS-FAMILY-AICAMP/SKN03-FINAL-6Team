@@ -1,69 +1,40 @@
 .second-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background-color: #042c38;
-  color: #ffffff;
-  padding: 50px 20px;
-}
-
-.second-section-title {
-  font-size: 3rem;
-  font-weight: bold;
-  color: #ff6161;
-  margin-bottom: 20px;
-}
-
-.second-section-description {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-}
-
-.highlight {
-  color: #ff6161;
-  font-weight: bold;
-  font-size: 1.7rem;
-}
-
-.second-section-subtext {
-  font-size: 1rem;
-  max-width: 800px;
-  line-height: 1.8;
-  margin-bottom: 50px;
-}
-
-.chatbot-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #1b1b1b;
-  padding: 20px;
-  border-radius: 15px;
-  width: 80%;
-  max-width: 500px;
-  position: relative; /* 상대적 배치 */
-}
-
-.chatbot-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 300px;
-  border-radius: 10px;
+  height: 100vh;
+  display: flex;
+  z-index: 3;
 }
 
-.chatbot-bubble {
-  position: absolute; /* 위치를 고정 */
-  top: -20px; /* 이미지의 상단에 배치 */
-  right: 10px; /* 이미지의 오른쪽으로 배치 */
-  background-color: #ffffff;
-  color: #333333;
-  font-size: 1rem;
-  font-weight: bold;
-  padding: 10px 15px;
-  border-radius: 20px;
-  border: 1px solid #cccccc;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  display: inline-block;
+.elevator {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  transition: transform 1.5s ease-in-out;
+}
+
+.elevator.left {
+  transform: translateX(-100%);
+}
+
+.elevator.right {
+  transform: translateX(100%);
+}
+
+.second-section.closing .elevator.left {
+  transform: translateX(0);
+}
+
+.second-section.closing .elevator.right {
+  transform: translateX(0);
+}
+
+.second-section.opening .elevator.left {
+  transform: translateX(-100%);
+}
+
+.second-section.opening .elevator.right {
+  transform: translateX(100%);
 }

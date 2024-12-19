@@ -8,30 +8,35 @@ env:
     AWS_DEFAULT_REGION: ap-northeast-2
 
 phases:
+  install:
+    commands:
+      - echo Installing Docker and pnpm...
+      - curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
+      - pnpm --version
+      - docker --version
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws --version
       - ECR_PASSWORD=$(aws ecr get-login-password --region $AWS_DEFAULT_REGION)
       - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
       - echo -n ${ECR_PASSWORD} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo "REPOSITORY_URI: $REPOSITORY_URI"
 
   build:
     commands:
-      - echo Build started on `date`
-      - cd ./TailorLink_Front
-      - echo Building the Docker image...
+      - echo Building Docker image...
       - docker build --no-cache -t $IMAGE_REPO_NAME:$IMAGE_TAG .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI
 
   post_build:
     commands:
-      - echo Packaging Source...
-      - echo "Skipping Docker commands as ECR is not used"
+      - echo Pushing Docker image to Amazon ECR...
+      - docker push $REPOSITORY_URI
+      - echo Creating imagedefinitions.json for ECS...
       - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_CONTAINER_NAME $REPOSITORY_URI > imagedefinitions.json
 
 artifacts:
-  files: 
+  files:
     - imagedefinitions.json
-  base-directory: ./TailorLink_Front
