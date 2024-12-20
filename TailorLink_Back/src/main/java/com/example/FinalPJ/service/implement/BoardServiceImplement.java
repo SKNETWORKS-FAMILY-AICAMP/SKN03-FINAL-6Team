@@ -3,6 +3,7 @@ package com.example.FinalPJ.service.implement;
 import com.example.FinalPJ.entity.BoardEntity;
 import com.example.FinalPJ.exception.BoardNotFoundException;
 import com.example.FinalPJ.dto.BoardDTO;
+import com.example.FinalPJ.dto.request.board.BoardRequestDTO;
 import com.example.FinalPJ.dto.response.board.BoardResponseDTO;
 import com.example.FinalPJ.repository.BoardRepository;
 import com.example.FinalPJ.service.BoardService;
@@ -22,8 +23,19 @@ public class BoardServiceImplement implements BoardService {
     private BoardRepository boardRepository;
 
     @Override
-    public ResponseEntity<? super BoardResponseDTO> boardWrite(BoardDTO boardDTO) {
-        BoardEntity board = convertToEntity(boardDTO);
+    public ResponseEntity<? super BoardResponseDTO> boardWrite(BoardRequestDTO dto) {
+        BoardEntity board = convertRequestToEntity(dto); // 수정된 메서드 호출
+        boardRepository.save(board);
+        return BoardResponseDTO.success();
+    }
+
+    @Override
+    public ResponseEntity<? super BoardResponseDTO> boardUpdate(Integer boardId, BoardRequestDTO dto) {
+        BoardEntity board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
+        board.setTitle(dto.getTitle());
+        board.setContent(dto.getContent());
+        board.setCreatetime(dto.getCreatetime() == null ? LocalDateTime.now() : dto.getCreatetime());
         boardRepository.save(board);
         return BoardResponseDTO.success();
     }
@@ -31,7 +43,7 @@ public class BoardServiceImplement implements BoardService {
     @Override
     public ResponseEntity<List<BoardDTO>> boardList() {
         List<BoardDTO> boardList = boardRepository.findAll().stream()
-                .map(this::convertToDTO)
+                .map(this::convertEntityToDTO) // 수정된 메서드 호출
                 .collect(Collectors.toList());
         return ResponseEntity.ok(boardList);
     }
@@ -40,7 +52,7 @@ public class BoardServiceImplement implements BoardService {
     public ResponseEntity<BoardDTO> boardView(Integer boardId) {
         BoardEntity board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID : " + boardId));
-        return ResponseEntity.ok(convertToDTO(board));
+        return ResponseEntity.ok(convertEntityToDTO(board)); // 수정된 메서드 호출
     }
 
     @Override
@@ -56,21 +68,23 @@ public class BoardServiceImplement implements BoardService {
     public ResponseEntity<List<BoardDTO>> boardListSortByDate() {
         List<BoardDTO> boardList = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createtime"))
                 .stream()
-                .map(this::convertToDTO)
+                .map(this::convertEntityToDTO) // 수정된 메서드 호출
                 .collect(Collectors.toList());
         return ResponseEntity.ok(boardList);
     }
 
-    private BoardEntity convertToEntity(BoardDTO boardDTO) {
+    // BoardRequestDTO를 BoardEntity로 변환하는 메서드
+    private BoardEntity convertRequestToEntity(BoardRequestDTO dto) {
         BoardEntity board = new BoardEntity();
-        board.setTitle(boardDTO.getTitle());
-        board.setContent(boardDTO.getContent());
-        board.setAuthor(boardDTO.getAuthor());
-        board.setCreatetime(boardDTO.getCreatetime() == null ? LocalDateTime.now() : boardDTO.getCreatetime());
+        board.setTitle(dto.getTitle());
+        board.setContent(dto.getContent());
+        board.setAuthor(dto.getAuthor());
+        board.setCreatetime(LocalDateTime.now());
         return board;
     }
 
-    private BoardDTO convertToDTO(BoardEntity board) {
+    // BoardEntity를 BoardDTO로 변환하는 메서드
+    private BoardDTO convertEntityToDTO(BoardEntity board) {
         return new BoardDTO(
                 board.getBoard_id(),
                 board.getTitle(),
@@ -78,25 +92,5 @@ public class BoardServiceImplement implements BoardService {
                 board.getAuthor(),
                 board.getCreatetime()
         );
-    }
-
-    @Override
-    public ResponseEntity<? super BoardResponseDTO> boardUpdate(Integer boardId, BoardDTO boardDTO) {
-        // 1. 해당 ID의 게시글 찾기
-        BoardEntity board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
-
-        // 2. 기존 게시글 정보를 새로운 데이터로 업데이트
-        board.setTitle(boardDTO.getTitle());
-        board.setContent(boardDTO.getContent());
-        board.setCreatetime(boardDTO.getCreatetime() == null ? LocalDateTime.now() : boardDTO.getCreatetime());
-
-        board.setAuthor(board.getAuthor());
-
-        // 3. 저장
-        boardRepository.save(board);
-
-        // 4. 성공 응답 반환
-        return BoardResponseDTO.success();
     }
 }

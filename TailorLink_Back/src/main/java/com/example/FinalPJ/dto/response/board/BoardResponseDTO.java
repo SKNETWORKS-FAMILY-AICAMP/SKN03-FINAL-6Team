@@ -13,12 +13,10 @@ public class BoardResponseDTO extends ResponseDTO{
         super();
     }
 
-
     public static ResponseEntity<BoardResponseDTO> success(){
         BoardResponseDTO responsebody = new BoardResponseDTO();
         return ResponseEntity.status(HttpStatus.OK).body(responsebody);
     }
-
 
     public static ResponseEntity<ResponseDTO> titleSizeFail() {
         ResponseDTO responsebody = new ResponseDTO(ResponseCode.TITLE_SIZE_ERROR, ResponseMessage.TITLE_SIZE_FAIL);
@@ -34,7 +32,5 @@ public class BoardResponseDTO extends ResponseDTO{
         ResponseDTO responsebody = new ResponseDTO(ResponseCode.WRITER_SIZE_ERROR, ResponseMessage.WRITER_SIZE_FAIL);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responsebody);
     }
-
-
-
 }
+
