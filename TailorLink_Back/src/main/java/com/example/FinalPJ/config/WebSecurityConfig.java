@@ -1,6 +1,7 @@
 package com.example.FinalPJ.config;
 
 import com.example.FinalPJ.filter.JwtAuthenticationFilter;
+import com.example.FinalPJ.handler.LogoutAuthSuccessHandler;
 import com.example.FinalPJ.handler.OAuth2SuccessHandler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
