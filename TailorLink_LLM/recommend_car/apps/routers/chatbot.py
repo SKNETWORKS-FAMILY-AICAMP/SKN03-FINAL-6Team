@@ -59,8 +59,6 @@ async def chat(chat_request: ChatRequest):
             "response": "",
             "suggested_questions": [],
             "page_info": {},
-            "input_filtered": False,  
-            "search_exhausted": False 
         }
 
         # 워크플로우 실행 및 상태 갱신
