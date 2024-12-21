@@ -14,17 +14,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Entity(name = "board")
 @Table(name = "board")
 public class BoardEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer board_id;
-
     private String title;
-
     private String content;
-
     private String author;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createtime;
 }
