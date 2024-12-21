@@ -22,61 +22,46 @@ public class BoardController {
         this.boardService = boardService;
     }
 
-    @GetMapping("/write")
-    public String boardWriteForm() {
-        return "boardwrite";
-    }
-
-    @PostMapping("/writepro")
-    public ResponseEntity<?> boardWritePro(
-            @Valid @RequestBody BoardRequestDTO dto,
-            BindingResult bindingResult
-    ) {
-        // 검증 실패 시 처리
+    @PostMapping("/write")
+    public ResponseEntity<?> boardWritePro(@RequestBody @Valid BoardRequestDTO dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return handleValidationErrors(bindingResult);
+            return handleValidationErrors(bindingResult); // 유효성 검사 실패 처리
         }
-        return boardService.boardWrite(dto);
+        return boardService.boardWrite(dto); // 성공 시 JSON 형태 응답
     }
 
-    @PostMapping("/update/{board_id}")
+    @PutMapping("/update/{board_id}")
     public ResponseEntity<?> boardUpdate(
             @PathVariable("board_id") Integer board_id,
-            @Valid @RequestBody BoardRequestDTO dto, // 반드시 @Valid와 함께
-            BindingResult bindingResult // @Valid 바로 다음에 위치해야 함
+            @RequestBody @Valid BoardRequestDTO dto,
+            BindingResult bindingResult
     ) {
         if (bindingResult.hasErrors()) {
-            return handleValidationErrors(bindingResult); // Validation 에러 처리
+            return handleValidationErrors(bindingResult);
         }
         return boardService.boardUpdate(board_id, dto);
     }
 
-
     @GetMapping("/list")
-    public String boardList(Model model) {
-        List<BoardDTO> boardList = boardService.boardList().getBody();
-        model.addAttribute("list", boardList);
-        return "boardlist";
+    public ResponseEntity<List<BoardDTO>> boardList() {
+        return boardService.boardList(); // JSON 형태로 데이터 반환
     }
 
-    @GetMapping("/view")
-    public String boardView(Model model, @RequestParam("board_id") Integer board_id) {
-        BoardDTO board = boardService.boardView(board_id).getBody();
-        model.addAttribute("board", board);
-        return "boardview";
+    @GetMapping("/view/{board_id}")
+    public ResponseEntity<BoardDTO> boardView(@PathVariable("board_id") Integer board_id) {
+        return boardService.boardView(board_id); // JSON 형태로 반환
     }
 
-    @GetMapping("/delete")
-    public String boardDelete(@RequestParam("board_id") Integer board_id) {
+    @DeleteMapping("/delete/{board_id}")
+    public ResponseEntity<?> boardDelete(@PathVariable("board_id") Integer board_id) {
         boardService.boardDelete(board_id);
-        return "redirect:/v1/board/list";
+        return ResponseEntity.ok().body("게시물이 성공적으로 삭제되었습니다.");
     }
 
-    @GetMapping("/modify/{board_id}")
-    public String boardModify(@PathVariable("board_id") Integer board_id, Model model) {
-        BoardDTO board = boardService.boardView(board_id).getBody();
-        model.addAttribute("board", board);
-        return "boardmodify";
+    @PutMapping("/modify/{board_id}")
+    public ResponseEntity<?> boardModify(@PathVariable("board_id") Integer board_id, @RequestBody BoardRequestDTO dto) {
+        boardService.boardUpdate(board_id, dto);
+        return ResponseEntity.ok().body("게시물이 성공적으로 수정되었습니다.");
     }
 
     @GetMapping("/list/sorted")
@@ -98,4 +83,3 @@ public class BoardController {
         return ResponseEntity.badRequest().build();
     }
 }
-

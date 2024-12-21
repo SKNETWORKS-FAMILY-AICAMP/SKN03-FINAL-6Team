@@ -3,7 +3,6 @@ package com.example.FinalPJ.dto.response.auth;
 import com.example.FinalPJ.common.ResponseCode;
 import com.example.FinalPJ.common.ResponseMessage;
 import com.example.FinalPJ.dto.response.ResponseDTO;
-import com.example.FinalPJ.dto.response.SignUpResponseDTO;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
