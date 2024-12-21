@@ -33,9 +33,10 @@ public class WebSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final DefaultOAuth2UserService oauth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final LogoutAuthSuccessHandler logoutAuthSuccessHandler ;
 
     @Bean
-    public SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity
                 // 외부 도메인에서 API 요청 허용
@@ -49,6 +50,8 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/", "/v1/auth/**", "/auth2/**", "/v1/board/**").permitAll()
+                        .requestMatchers("/v1/manager/**").hasRole("MANAGER")
+                        .requestMatchers("/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -57,7 +60,11 @@ public class WebSecurityConfig {
                         .userInfoEndpoint(endpoint -> endpoint.userService(oauth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                 )
-
+                .logout(logout -> logout
+                        .logoutUrl("/v1/auth/sign-out")
+                        .logoutSuccessHandler(logoutAuthSuccessHandler)
+                        .permitAll()
+                )
                 .exceptionHandling(excptionHandling -> excptionHandling
                         .authenticationEntryPoint(new FaildAuthenticationEntryPoint())
                 )
@@ -69,9 +76,10 @@ public class WebSecurityConfig {
     @Bean
     protected CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin("http://localhost:3000");
+        corsConfiguration.addAllowedOriginPattern("*"); // addAllowedOriginPattern 사용 권장
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.setAllowCredentials(true); // 필요 시 추가
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);

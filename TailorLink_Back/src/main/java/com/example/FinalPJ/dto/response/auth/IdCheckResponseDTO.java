@@ -4,7 +4,6 @@ import com.example.FinalPJ.common.ResponseCode;
 import com.example.FinalPJ.common.ResponseMessage;
 import com.example.FinalPJ.dto.response.ResponseDTO;
 import lombok.Getter;
-import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
