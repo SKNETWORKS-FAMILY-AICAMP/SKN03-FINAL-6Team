@@ -1,27 +1,29 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import TopNav from "./components/Header"; // 네비게이션
-import Footer from "./components/Footer"; // 푸터
-import Home from "./pages/Home/Home"; // 홈
-import Features from "./pages/Features/Features"; // 주요 기능
-import ContactUs from "./pages/Service/ContactUs"; // 문의하기
-import Board from "./pages/Service/Board"; // 게시판
-import Login from "./pages/Login/Login"; // 로그인
-import Register from "./pages/Register/Register"; // 회원가입
-import ScrollToTop from "./components/ScrollToTop"; // 최상단으로 이동 버튼
+import TopNav from "./components/Header";
+import Footer from "./components/Footer";
+import Home from "./pages/Home/Home";
+import ChatBot from "./pages/Product/ChatBot";
+import Board from "./pages/Service/Board";
+import Qna from "./pages/Service/Qna";
+import FAQ from "./pages/Service/FAQ";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
+import TextSection from "./pages/Home/components/TextSection";
 
 function App() {
   return (
     <Router>
       <div style={styles.container}>
         <TopNav />
-        <ScrollToTop />
         <div style={styles.pageContent}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/service/contactus" element={<ContactUs />} />
+            <Route path="/text-section" element={<TextSection />} />
+            <Route path="/Product/ChatBot" element={<ChatBot />} />
             <Route path="/service/board" element={<Board />} />
+            <Route path="/service/qna" element={<Qna />} />
+            <Route path="/service/faq" element={<FAQ />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>
@@ -38,7 +40,7 @@ const styles = {
     flexDirection: "column",
     minHeight: "100vh",
     backgroundColor: "#f0f8ff",
-    paddingTop: "59px", // 헤더 높이만큼 여백 추가
+    paddingTop: "59px",
   },
   pageContent: {
     flex: 1,

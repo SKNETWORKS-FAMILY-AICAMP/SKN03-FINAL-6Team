@@ -1,0 +1,40 @@
+.elevator-section {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.elevator {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  transition: transform 1s ease-in-out;
+}
+
+.elevator.left {
+  transform: translateX(-100%);
+}
+
+.elevator.right {
+  transform: translateX(100%);
+}
+
+.elevator-section.closing .elevator.left {
+  transform: translateX(0);
+}
+
+.elevator-section.closing .elevator.right {
+  transform: translateX(0);
+}
+
+.elevator-section.opening .elevator.left {
+  transform: translateX(-100%);
+}
+
+.elevator-section.opening .elevator.right {
+  transform: translateX(100%);
+}

@@ -1,5 +1,4 @@
-# 빌드 단계
-FROM eclipse-temurin:23-jdk AS build
+FROM gradle:8.11.1-jdk17-alpine as build
 ENV APP_HOME=/apps
 WORKDIR $APP_HOME
 
@@ -13,12 +12,15 @@ COPY ./src $APP_HOME/src
 RUN ./gradlew clean build -x test
 
 # 실행 단계
-FROM eclipse-temurin:23-jre
+FROM openjdk:17-jdk
 ENV APP_HOME=/apps
 WORKDIR $APP_HOME
 
 # 빌드된 JAR 파일 복사
 COPY --from=build /apps/build/libs/SKN03-FINAL-6TEAM-0.0.1-SNAPSHOT.jar app.jar
+
+# 컨테이너 실행 유무 확인 
+HEALTHCHECK CMD curl http://localhost:8080/actuator/health
 
 # 애플리케이션 실행
 EXPOSE 8080
