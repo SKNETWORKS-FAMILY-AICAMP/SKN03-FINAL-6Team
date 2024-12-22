@@ -78,7 +78,7 @@ public class BoardServiceImplement implements BoardService {
         BoardEntity board = new BoardEntity();
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
-        board.setAuthor(dto.getAuthor());
+        board.setWriter(dto.getWriter());
         board.setCreatetime(LocalDateTime.now());
         return board;
     }
@@ -89,7 +89,7 @@ public class BoardServiceImplement implements BoardService {
                 board.getBoard_id(),
                 board.getTitle(),
                 board.getContent(),
-                board.getAuthor(),
+                board.getWriter(),
                 board.getCreatetime()
         );
     }

@@ -5,7 +5,6 @@ import com.example.FinalPJ.dto.response.board.BoardResponseDTO;
 import com.example.FinalPJ.dto.request.board.BoardRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import com.example.FinalPJ.service.BoardService;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
