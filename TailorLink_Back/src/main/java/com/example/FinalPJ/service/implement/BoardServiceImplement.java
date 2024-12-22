@@ -1,10 +1,10 @@
 package com.example.FinalPJ.service.implement;
 
-import com.example.FinalPJ.entity.BoardEntity;
-import com.example.FinalPJ.exception.BoardNotFoundException;
 import com.example.FinalPJ.dto.BoardDTO;
 import com.example.FinalPJ.dto.request.board.BoardRequestDTO;
 import com.example.FinalPJ.dto.response.board.BoardResponseDTO;
+import com.example.FinalPJ.entity.BoardEntity;
+import com.example.FinalPJ.exception.BoardNotFoundException;
 import com.example.FinalPJ.repository.BoardRepository;
 import com.example.FinalPJ.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;

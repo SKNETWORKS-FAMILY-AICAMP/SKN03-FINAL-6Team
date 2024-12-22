@@ -1,8 +1,8 @@
 package com.example.FinalPJ.contoroller;
 
 import com.example.FinalPJ.dto.BoardDTO;
-import com.example.FinalPJ.dto.response.board.BoardResponseDTO;
 import com.example.FinalPJ.dto.request.board.BoardRequestDTO;
+import com.example.FinalPJ.dto.response.board.BoardResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import com.example.FinalPJ.service.BoardService;
@@ -21,7 +21,7 @@ public class BoardController {
         this.boardService = boardService;
     }
 
-    @PostMapping("/writepro")
+    @PostMapping("/write")
     public ResponseEntity<?> boardWritePro(@RequestBody @Valid BoardRequestDTO dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return handleValidationErrors(bindingResult); // 유효성 검사 실패 처리

@@ -8,12 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @Getter
-public class BoardResponseDTO extends ResponseDTO{
-    private BoardResponseDTO () {
+public class BoardResponseDTO extends ResponseDTO {
+    private BoardResponseDTO() {
         super();
     }
 
-    public static ResponseEntity<BoardResponseDTO> success(){
+    public static ResponseEntity<BoardResponseDTO> success() {
         BoardResponseDTO responsebody = new BoardResponseDTO();
         return ResponseEntity.status(HttpStatus.OK).body(responsebody);
     }
@@ -33,4 +33,3 @@ public class BoardResponseDTO extends ResponseDTO{
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responsebody);
     }
 }
-
