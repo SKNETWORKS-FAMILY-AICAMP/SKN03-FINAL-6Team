@@ -71,9 +71,9 @@ def generate_vector_search_base_answer(state: State) -> State:
 
     if state['change_count'] > 0:
         query = state['message']
-        context = search_milvus.invoke({"query_list":[query]})
+        context = search_milvus.invoke({"query_list":[query], "car_id":state['car_id']})
     else:
-        context = search_milvus.invoke({"query_list":query_list})
+        context = search_milvus.invoke({"query_list":query_list, "car_id":state['car_id']})
 
     prompt = create_context_based_answer_prompt()
     llm = create_openai_model()
@@ -153,9 +153,6 @@ def calculate_score(state: State):
         state['change_count'] += 1
 
     return state
-
-
-
 
 def calculate_score_conditional(state: State):
     if state['is_stop']:

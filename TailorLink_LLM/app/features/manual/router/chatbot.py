@@ -64,7 +64,8 @@ async def chat(chat_request: ChatRequest):
     )
 
     conversation_history =  chat_history_manager.load_history(session_id)
-    agent_id = "manual_qa"
+
+    agent_id = "manual"
     # 기본값 초기화
     response_type = ""
     page_info = {
@@ -93,6 +94,7 @@ async def chat(chat_request: ChatRequest):
         suggest_question=[],
         timestamp=timestamp
     )
+
 # @manual_qa_router.post("/manual", response_model=ChatResponse)
 # async def ask_query(chat_request: ChatRequest):
 #     question = chat_request.user_input

@@ -7,7 +7,7 @@ from app.features.manual.models.reranker import bge_rf
 MILVUS_COLLECTION_NAME = "manual"  # 설정값으로 분리
 
 @tool
-def search_milvus(query_list: list, sparse_weight: float = 0.5, dense_weight: float = 0.5, limit: int = 10) -> list:
+def search_milvus(query_list: list, car_id: int, sparse_weight: float = 0.5, dense_weight: float = 0.5, limit: int = 10) -> list:
     """
     Perform a hybrid search in the Milvus vector database.
 
@@ -38,6 +38,7 @@ def search_milvus(query_list: list, sparse_weight: float = 0.5, dense_weight: fl
     for index, query in enumerate(query_list):
         results = hybrid_search(
             col=collection,
+            car_id=car_id,
             query_dense_embedding=query_embeddings["dense"][index],
             query_sparse_embedding=query_embeddings["sparse"]._getrow(index),
             sparse_weight=sparse_weight,

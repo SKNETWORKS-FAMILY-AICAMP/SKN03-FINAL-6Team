@@ -4,3 +4,4 @@ venv
 milvus
 node_modules
 .idea
+*.log.*

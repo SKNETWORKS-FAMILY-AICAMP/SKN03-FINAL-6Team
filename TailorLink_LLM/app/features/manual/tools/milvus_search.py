@@ -30,6 +30,7 @@ def sparse_search(col, query_sparse_embedding, limit=10):
 
 def hybrid_search(
     col,
+    car_id,
     query_dense_embedding,
     query_sparse_embedding,
     sparse_weight=1.0,
@@ -38,11 +39,11 @@ def hybrid_search(
 ):
     dense_search_params = {"metric_type": "IP", "params": {}}
     dense_req = AnnSearchRequest(
-        [query_dense_embedding], "dense_vector", dense_search_params, limit=limit
+        [query_dense_embedding], "dense_vector", dense_search_params, limit=limit, expr=f"model_id == {car_id}"
     )
     sparse_search_params = {"metric_type": "IP", "params": {}}
     sparse_req = AnnSearchRequest(
-        [query_sparse_embedding], "sparse_vector", sparse_search_params, limit=limit
+        [query_sparse_embedding], "sparse_vector", sparse_search_params, limit=limit, expr=f"model_id == {car_id}"
     )
     rerank = WeightedRanker(sparse_weight, dense_weight)
     res = col.hybrid_search(
