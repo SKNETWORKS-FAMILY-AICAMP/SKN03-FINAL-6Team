@@ -21,7 +21,7 @@ public class BoardController {
         this.boardService = boardService;
     }
 
-    @PostMapping("/write")
+    @PostMapping("/writepro")
     public ResponseEntity<?> boardWritePro(@RequestBody @Valid BoardRequestDTO dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return handleValidationErrors(bindingResult); // 유효성 검사 실패 처리
