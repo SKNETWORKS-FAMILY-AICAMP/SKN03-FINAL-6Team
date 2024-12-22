@@ -4,41 +4,77 @@ from app.features.manual.utils.types import State
 from langgraph.graph import START, END
 from app.features.manual.models.prompt_templates import *
 from app.features.manual.models.model import create_openai_model, create_ollama_model
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+from app.features.manual.models.schemas import QuestionList, GradeHallucinations, AnswerWithHistory
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from app.features.manual.tools.tools import search_milvus
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
-import ast
+
+from app.core.logger import logger
+
+def generate_history_base_answer(state: State):
+    logger.info("Running generate history base answer")
+
+    history_base_prompt = create_history_base_answer_prompt()
+    llm = create_openai_model('gpt-4o-mini')
+    structured_llm_grader = llm.with_structured_output(AnswerWithHistory)
+    contextual_responder = history_base_prompt | structured_llm_grader
+
+    response = contextual_responder.invoke({"chat_history": state['chat_history'], "question": state['message']})
+
+    state['answer'] = response.answer
+
+    if response.binary_score == 'yes':
+        state['is_stop'] = True
+    else:
+        state['is_stop'] = False
+
+    return state
+
+def history_base_answer_check_conditional(state: State):
+    if state['is_stop']:
+        return END
+    else:
+        return "genesis_check"
 
 # 제네시스 관련 질문 판단 노드 함수
-def genesis_check(state: State):
-    print('판단 시작')
-    prompt = create_genesis_classification_prompt()
-    llm = create_openai_model()
+def genesis_check_and_query_split(state: State) -> State:
+    logger.info("Running genesis check")
 
-    chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({"question":state['message']})
+    prompt = create_check_genesis_and_split_prompt()
+    llm = create_openai_model('gpt-4o-mini')
+    parser = JsonOutputParser(pydantic_object=QuestionList)
+    prompt = prompt.partial(format_instructions=parser.get_format_instructions())
 
-    if response == "yes":
-        state['is_valid_question'] = True
-    else:
-        state['is_valid_question'] = False
+    chain = prompt | llm | parser
+
+    response = chain.invoke({'question': state['message']})
+
+    state['questions'] = response['question_list']
+    state['answer'] = response['print']
+    state['is_stop'] = not response['vailid_question']
 
     return state
 
 def genesis_check_conditional(state: State):
-    if state['is_valid_question']:
-        return 'search'
-    else:
+    if state['is_stop']:
         return END
+    else:
+        return 'search'
 
 # 벡터DB 조회 노드 함수
-def vector_search(state: State) -> State:
-    print('벡터 조회')
-    query = state['message']
-    state['previous_question'].append(query)
+def generate_vector_search_base_answer(state: State) -> State:
+    logger.info("Running vector search")
 
-    context = search_milvus(query)
+    query_list = state['questions']
+    state['previous_question'].append(state['message'])
+
+    if state['change_count'] > 0:
+        query = state['message']
+        context = search_milvus.invoke({"query_list":[query]})
+    else:
+        context = search_milvus.invoke({"query_list":query_list})
+
     prompt = create_context_based_answer_prompt()
     llm = create_openai_model()
 
@@ -50,9 +86,36 @@ def vector_search(state: State) -> State:
 
     return state
 
+def grade_hallucination(state: State):
+    logger.info('running grade_hallucination')
+
+    hallucination_prompt = create_hallucination_prompt()
+    llm = create_openai_model('gpt-4o-mini')
+    structured_llm_grader = llm.with_structured_output(GradeHallucinations)
+
+    hallucination_grader = hallucination_prompt | structured_llm_grader
+
+    docs = state['context']
+    generation = state['answer']
+
+    response = hallucination_grader.invoke({"documents": docs, "generation": generation})
+
+    if response.binary_score == 'yes':
+        state['is_stop'] = False
+    else:
+        state['is_stop'] = True
+
+def grade_hallucination_conditional(state: State):
+    if state['is_stop']:
+        return 'rewrite'
+    else:
+        return 'calculate'
+
+
 # 답변 점수 측정 노드 함수
 def calculate_score(state: State):
-    print('점수 측정')
+    logger.info("Running calculation score")
+
     query = state['message']
     context = state['context']
     answer = state['answer']
@@ -63,7 +126,7 @@ def calculate_score(state: State):
     response_schemas = [
         ResponseSchema(
             name="score",
-            description="질문에 대한 점수, 숫자여햐 한다.",
+            description="질문에 대한 점수, 숫자여야 한다.",
         ),
         ResponseSchema(name="reason", description="점수를 제외한 나머지 "),
     ]
@@ -75,32 +138,37 @@ def calculate_score(state: State):
 
     chain = prompt | llm | output_parser
 
-    response = chain.invoke({"context": context, "question": query, "answer": answer})
-    print(f'점수: {response['score']} ')
-    if not state['best_answer'] or state['best_score'] < response['score']:
+    response = chain.invoke({"question": query, "response": answer})
+    logger.info(f'점수: {response['score']}')
+
+    if not state['best_score'] or state['best_score'] < response['score']:
         state['best_answer'] = state['answer']
         state['best_score'] = response['score']
 
     if response['score']>=85 or state ['change_count']==2:
-        state['is_pass'] = True
+        state['answer'] = state['best_answer']
+        state['is_stop'] = True
     else:
-        state['is_pass'] = False
+        state['is_stop'] = False
         state['change_count'] += 1
 
     return state
 
 
+
+
 def calculate_score_conditional(state: State):
-    if state['is_pass']:
+    if state['is_stop']:
         return END
     else:
         return 'rewrite'
 
 # 질문 쿼리 변경 노드 함수
 def query_rewrite(state: State) -> State:
-    print('쿼리변경')
+    logger.info("Running query rewrite")
+
     prompt = create_query_rewrite_prompt()
-    llm = create_openai_model()
+    llm = create_openai_model('gpt-4o-mini')
     previous = state['previous_question']
     query = state['message']
 
@@ -111,18 +179,4 @@ def query_rewrite(state: State) -> State:
     state['message'] = response
 
     return state
-
-# 질문 분리 노드 함수
-def query_split(state: State) -> State:
-    prompt = create_question_split_prompt()
-    llm = create_ollama_model('linkbricks-8B')
-    chain = prompt | llm | StrOutputParser()
-
-    query = state['message']
-
-    response = chain.invoke({'question': query})
-
-    actual_list = ast.literal_eval(response)
-
-
 

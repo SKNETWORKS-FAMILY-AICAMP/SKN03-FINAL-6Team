@@ -50,12 +50,29 @@ class Settings(BaseSettings):
 
     MILVUS_DB_NAME: str = Field(default='tailorlink', description='Milvus database name')
 
+    LANGCHAIN_API_KEY: str = Field(
+        default_factory=lambda: get_ssm_parameter('/tailorlink/langchain/LANGCHAIN_API_KEY'),
+        description="Langchain API 키"
+    )
+
+    LANGCHAIN_ENDPOINT: str = Field(
+        default_factory=lambda: get_ssm_parameter('/tailorlink/langchain/LANGCHAIN_ENDPOINT'),
+        description="Langchain endpoint"
+    )
+
     # 클래스 초기화 시 os.environ에 값 추가
     def __init__(self, **data):
         super().__init__(**data)
         # OPENAI_API_KEY를 os.environ에 추가
         if 'OPENAI_API_KEY' not in os.environ:
             os.environ['OPENAI_API_KEY'] = self.OPENAI_API_KEY
+        if 'LANGCHAIN_API_KEY' not in os.environ:
+            os.environ['LANGCHAIN_API_KEY'] = self.LANGCHAIN_API_KEY
+        if 'LANGCHAIN_TRACING_V2' not in os.environ:
+            os.environ['LANGCHAIN_TRACING_V2'] = "true"
+        if 'LANGCHAIN_PROJECT' not in os.environ:
+            os.environ['LANGCHAIN_PROJECT'] = 'TailorLink'
+
 
 # 설정 객체 생성
 settings = Settings()

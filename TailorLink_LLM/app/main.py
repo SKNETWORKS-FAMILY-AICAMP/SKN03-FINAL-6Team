@@ -12,13 +12,13 @@ app = FastAPI(
     lifespan=lifespan,  # lifespan 컨텍스트 추가
 )
 
-# CORS 미들웨어 추가
+# CORS 설정 추가
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 origin 허용 (개발 시에만 사용)
+    allow_origins=["*"],  # 허용할 Origin (특정 도메인을 설정하는 것이 보안에 더 좋음)
     allow_credentials=True,
-    allow_methods=["*"],  # 모든 HTTP 메서드 허용
-    allow_headers=["*"],  # 모든 헤더 허용
+    allow_methods=["*"],  # 허용할 HTTP 메서드
+    allow_headers=["*"],  # 허용할 HTTP 헤더
 )
 
 # 라우터 등록

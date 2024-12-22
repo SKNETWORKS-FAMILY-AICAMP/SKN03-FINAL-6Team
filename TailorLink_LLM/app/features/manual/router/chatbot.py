@@ -8,9 +8,18 @@ from datetime import datetime
 import json
 import asyncio
 from fastapi.responses import StreamingResponse
+
+from app.core.logger import logger
 from app.utils.session_manager import generate_session_id, initialize_session, update_session_access,cleanup_sessions
 
-from app.features.manual.nodes.rag_pipeline import run_rag
+from app.database.chat_history import ChatHistoryManager, Session
+from langchain_core.messages import HumanMessage, AIMessage
+
+# 세션 및 매니저 초기화
+session = Session()
+chat_history_manager = ChatHistoryManager(session)
+
+from app.features.manual.nodes.rag_pipeline import run_manual_chatbot, test_rag
 manual_qa_router = APIRouter()
 
 conversation_memory = {}
@@ -22,6 +31,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None)
+    user_id: Optional[str] = Field(None)
     user_input: str = Field(...)
     car_id: int = Field(...)
 
@@ -34,22 +44,26 @@ class ChatResponse(BaseModel):
     suggest_question: list = Field(..., description="예상 질문")
     timestamp: datetime = Field(..., description="응답 생성 시각")
 
-@manual_qa_router.post("/manual_qa", response_model=ChatResponse)
+@manual_qa_router.post("/manual", response_model=ChatResponse)
 async def chat(chat_request: ChatRequest):
+    logger.info('Running manaul chatbot')
+
+    # 세션ID가 없으면 생성
     session_id = chat_request.session_id or generate_session_id()
-    initialize_session(session_id)
-    update_session_access(session_id)
+    user_id = chat_request.user_id
     user_input = chat_request.user_input
+    car_id = chat_request.car_id
 
+    logger.info(f'user_id: {user_id}\n session_id: {session_id} \n')
 
-    session_data = conversation_memory[session_id]
-    session_data["last_access"] = time.time()
-    conversation_history = session_data["history"]
+    chat_history_manager.save_message(
+        session_id=session_id,
+        user_id=user_id,
+        message=HumanMessage(content=user_input),
+        message_type="human"
+    )
 
-    # 사용자 입력 추가
-    user_input = chat_request.user_input
-    conversation_history.append({"role": "user", "content": user_input})
-
+    conversation_history =  chat_history_manager.load_history(session_id)
     agent_id = "manual_qa"
     # 기본값 초기화
     response_type = ""
@@ -60,12 +74,15 @@ async def chat(chat_request: ChatRequest):
     }
     timestamp = datetime.now()
 
-    res = run_rag(user_input, conversation_history)
+    res = run_manual_chatbot(user_input, car_id, conversation_history)
 
     # AI 응답 추가
-    conversation_history.append({"role": "ai", "content": res})
-
-    cleanup_sessions()
+    chat_history_manager.save_message(
+        session_id=session_id,
+        user_id=user_id,
+        message=AIMessage(content=res),
+        message_type="ai"
+    )
 
     return ChatResponse(
         response=res,
@@ -76,19 +93,60 @@ async def chat(chat_request: ChatRequest):
         suggest_question=[],
         timestamp=timestamp
     )
-@manual_qa_router.post("/manual", response_model=ChatResponse)
-async def ask_query(chat_request: ChatRequest):
-    question = chat_request.user_input
-    print(question)
-    async def mock_stream_openai_response(prompt):
-        accumulated_text = ""  # 누적 텍스트 저장
-        res = run_rag(prompt)
-        print(type(res))
-        for letter in res:
-            accumulated_text += letter  # 텍스트 누적
-            yield json.dumps({"status": "processing", "data": letter}, ensure_ascii=False) + "\n"
-            await asyncio.sleep(0.05)  # 스트림 딜레이 시뮬레이션
+# @manual_qa_router.post("/manual", response_model=ChatResponse)
+# async def ask_query(chat_request: ChatRequest):
+#     question = chat_request.user_input
+#     print(question)
+#     async def mock_stream_openai_response(prompt):
+#         accumulated_text = ""  # 누적 텍스트 저장
+#         res = run_rag(prompt)
+#         print(type(res))
+#         for letter in res:
+#             accumulated_text += letter  # 텍스트 누적
+#             yield json.dumps({"status": "processing", "data": letter}, ensure_ascii=False) + "\n"
+#             await asyncio.sleep(0.05)  # 스트림 딜레이 시뮬레이션
+#
+#         yield json.dumps({"status": "complete", "data": "Stream finished"}, ensure_ascii=False) + "\n"
+#
+#     return StreamingResponse(mock_stream_openai_response(question), media_type="text/event-stream")
 
-        yield json.dumps({"status": "complete", "data": "Stream finished"}, ensure_ascii=False) + "\n"
 
-    return StreamingResponse(mock_stream_openai_response(question), media_type="text/event-stream")
+@manual_qa_router.post("/test", response_model=ChatResponse)
+async def test(chat_request: ChatRequest):
+    logger.info('Running test')
+    session_id = chat_request.session_id or generate_session_id()
+
+    logger.info(f'session_id: {session_id}')
+
+    user_input = chat_request.user_input
+
+
+
+    # 사용자 입력 추가
+    user_input = chat_request.user_input
+
+    agent_id = "manual_qa"
+    # 기본값 초기화
+    response_type = ""
+    page_info = {
+        "car_id" : "",
+        "car_name": "",
+        "car_image": "",
+    }
+    timestamp = datetime.now()
+
+    res = test_rag(user_input, session_id)
+
+
+
+    return ChatResponse(
+        response=res,
+        session_id=session_id,
+        response_type=response_type,
+        agent_id=agent_id,
+        page_info=page_info,
+        suggest_question=[],
+        timestamp=timestamp
+    )
+
+

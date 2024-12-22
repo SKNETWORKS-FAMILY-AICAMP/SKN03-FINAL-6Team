@@ -13,15 +13,15 @@ TailorLink_LLM/
 │   │   ├── __init__.py
 │   │   ├── mysql.py                 # mysql DB 연결 및 초기화
 │   │   ├── milvus.py                # milvus DB 연결 및 초기화
-│   │
+│   │   ├── chat_history.py
 │   ├── features/                    # 기능별 디렉토리
 │   │   ├── car_recommendation/      # 차량 추천 기능
 │   │   ├── manual/                  # 매뉴얼 Q&A 기능
 │   │   ├── finance/
 │   │
 │   ├── utils/                       # 공통 유틸리티
-│   │   ├── __init__.py
-│   │   ├── session_manager.py       # 세션 관리
+│       ├── __init__.py
+│       ├── session_manager.py       # 세션 관리
 ├── requirements.txt                 # Python 의존성
 ├── Dockerfile                       # Docker 설정
 ├── .gitignore                       # Git 제외 파일

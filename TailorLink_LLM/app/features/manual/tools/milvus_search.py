@@ -48,4 +48,7 @@ def hybrid_search(
     res = col.hybrid_search(
         [sparse_req, dense_req], rerank=rerank, limit=limit, output_fields=["text"]
     )[0]
-    return [hit.get("text") for hit in res]
+    # 중복 제거
+    unique_results = list(set(hit.get("text") for hit in res))
+
+    return unique_results
