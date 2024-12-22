@@ -1,11 +1,12 @@
 import os
 import logging
 import re
+import json
 from difflib import SequenceMatcher
-from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 from app.features.recommend_car.apps.db import get_connection
-load_dotenv()
+from app.core.config import settings
+
 
 logging.basicConfig(
     level=logging.DEBUG,  
@@ -18,16 +19,17 @@ logging.basicConfig(
 logger = logging.getLogger("recommend_car")
 
 def connect_aws_db():
-    db_host = os.getenv("DB_HOST")
-    db_port = os.getenv("DB_PORT", 3306)
-    db_user = os.getenv("DB_USER")
-    db_password = os.getenv("DB_PASSWORD")
-    db_name = os.getenv("DB_NAME")
+    db_host = settings.DATABASE_URL
+    db_port = "3306"
+    db_user = settings.DATABASE_USER
+    db_password = settings.DATABASE_PASSWORD
+    db_name = settings.DATABASE_NAME
     
     if not all([db_host, db_port, db_user, db_password, db_name]):
         raise ValueError("데이터베이스 환경 변수를 설정해주세요.")
-    
+
     db_uri = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    logger.info(db_uri)
     db = SQLDatabase.from_uri(db_uri)
 
     return db
@@ -157,57 +159,31 @@ def find_matching_car_id(crawled_car_name):
         print("DB에 car_name을 추가하는 데 실패했습니다.")
         return None
 
-def rerank_results(db_results, milvus_results, weights=[0.6, 0.4]):
-    """
-    DB와 Milvus 검색 결과를 Re-ranking 하는 함수.
-    """
-    try:
-        combined_results = []
-
-        # DB 결과 추가
-        for result in db_results:
-            combined_results.append({
-                "car_id": result.get("car_id", "unknown"),
-                "car_name": result.get("car_name", "알 수 없는 차량"),
-                "score": weights[0] * 1.0  # 기본 점수 (DB)
-            })
-
-        # Milvus 결과 추가
-        for result in milvus_results:
-            combined_results.append({
-                "car_id": result.get("car_id", "unknown"),
-                "car_name": result.get("car_name", "알 수 없는 차량"),
-                "score": weights[1] * (100.0 - result.get("score", 100.0))  # 거리 반전 점수
-            })
-
-        # 점수를 기준으로 정렬
-        reranked_results = sorted(combined_results, key=lambda x: x["score"], reverse=True)
-        print("Re-ranking 결과:", reranked_results)
-        return reranked_results
-
-    except Exception as e:
-        print(f"[ERROR] Re-ranking 중 오류 발생: {e}")
-        return [{"car_id": "unknown", "car_name": "알 수 없는 차량", "score": 0.0}]
-
 def parse_milvus_results(search_results):
     """
     Milvus 검색 결과를 파싱하여 사용할 수 있는 형태로 변환합니다.
     """
     parsed_results = []
     try:
-        for hit in search_results:
-            if isinstance(hit, dict):
-                parsed_results.append({
-                    "car_id": hit.get("id", "unknown"),
-                    "car_name": "알 수 없는 차량",
-                    "score": hit.get("distance", 100.0)  # 거리 기반 점수
-                })
+        for result_list in search_results:
+            for hit in result_list:
+                car_id = hit.get("car_id")
+                metadata = hit.get("Dynamic Fields")
+
+                # 유효성 검증: car_id와 metadata가 None이면 추가하지 않음
+                if car_id is not None or metadata is not None:
+                    parsed_results.append({
+                        "car_id": car_id,
+                        "metadata": metadata
+                    })
+        
+        # 결과가 비어 있는 경우 디버깅 메시지 출력
+        if not parsed_results:
+            print("[DEBUG] Milvus 검색 결과가 유효하지 않습니다. 모든 항목이 None입니다.")
     except Exception as e:
         print(f"[ERROR] Milvus 결과 파싱 중 오류 발생: {e}")
+        parsed_results = []
 
-    if not parsed_results:
-        print("Milvus 결과가 비어 있습니다. 기본값으로 설정합니다.")
-        parsed_results = [{"car_id": "unknown", "car_name": "알 수 없는 차량", "score": 100.0}]
-
-    print("파싱된 Milvus 결과:", parsed_results)
+    print("[DEBUG] Milvus 파싱 결과:", parsed_results)
     return parsed_results
+
