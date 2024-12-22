@@ -1,12 +1,12 @@
 import pymysql
 import os
 from dotenv import load_dotenv
-from core.ssmparam import get_ssm_parameter
+from app.core.ssmparam import get_ssm_parameter
 # .env 파일 로드
 # load_dotenv()
 import  logging
 
-from main import logger
+from app.core.logger import logger
 
 # 환경 변수에서 데이터베이스 연결 정보 가져오기
 DB_HOST = get_ssm_parameter('/tailorlink/mysql/MYSQL_URI')

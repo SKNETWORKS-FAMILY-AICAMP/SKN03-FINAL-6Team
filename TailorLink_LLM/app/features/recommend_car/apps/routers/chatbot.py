@@ -5,8 +5,8 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-from recommend_car.apps.workflow import build_car_recommendation_workflow
-from recommend_car.apps.agent_state import AgentState  # AgentState 추가
+from app.features.recommend_car.apps.workflow import build_car_recommendation_workflow
+from app.features.recommend_car.apps.agent_state import AgentState  # AgentState 추가
 
 car_recommend_router = APIRouter()
 

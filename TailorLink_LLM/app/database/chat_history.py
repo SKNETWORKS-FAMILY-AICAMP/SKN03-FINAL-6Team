@@ -12,7 +12,7 @@ class MessageModel(Base):
     """SQL 대화 기록 모델"""
     __tablename__ = "chat_history"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(String(255), index=True, nullable=False)
     session_id = Column(String(255), index=True, nullable=False)
     message_type = Column(String(255), nullable=False)  # 'human' or 'ai'
     content = Column(Text, nullable=False)
@@ -46,6 +46,7 @@ class ChatHistoryManager:
             self.session.query(MessageModel)
             .filter_by(session_id=session_id)
             .order_by(MessageModel.created_at)
+            .limit(20)  # 최근 20개 가져오기
             .all()
         )
         # 메시지 타입에 따라 HumanMessage 또는 AIMessage로 변환

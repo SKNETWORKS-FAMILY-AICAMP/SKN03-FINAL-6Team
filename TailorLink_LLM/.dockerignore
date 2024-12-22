@@ -1,9 +1,26 @@
 .env
 .gitignore
-doc_retrieval_qa/autorag/
-doc_retrieval_qa/data/
+app/features/manual/autorag/
+app/features/manual/data/
+app/features/manual/milvus/
 *.ipynb
 *.drawio
 *.html
-doc_retrieval_qa/milvus/
 __pycache__/
+node_modules
+*.csv
+*.tmp
+*.md
+tests/
+.venv/
+venv/
+*.log              # 모든 .log 파일
+# 빌드에 필요 없는 파일 및 폴더 제외
+node_modules/      # Node.js 의존성 폴더
+*.pyc              # Python 컴파일 파일
+.DS_Store          # macOS 시스템 파일
+.env               # 환경 변수 파일
+__pycache__/       # Python 캐시 디렉토리
+*.tmp              # 임시 파일
+build/             # 빌드 결과물 폴더
+.idea/

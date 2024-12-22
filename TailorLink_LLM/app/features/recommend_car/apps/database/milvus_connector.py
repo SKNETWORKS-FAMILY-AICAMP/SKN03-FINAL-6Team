@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModel, AutoTokenizer
 from pymilvus import MilvusClient, DataType
-from recommend_car.apps.ssmparam import get_ssm_parameter
+from app.features.recommend_car.apps.ssmparam import get_ssm_parameter
 
 # Milvus 설정
 MILVUS_URI = get_ssm_parameter('/tailorlink/milvus/MILVUS_URI')

@@ -1,10 +1,4 @@
-# from retriever import retrieve_documents
-# from models.model import call_llm
-from Demos.win32ts_logoff_disconnected import session
-
 from app.features.manual.models.model import create_openai_model
-from app.features.manual.utils.pdf_loader import pdf_load
-from app.features.manual.utils.preprocess import clean_text
 from app.features.manual.nodes.nodes import (
         generate_history_base_answer,
         genesis_check_and_query_split,
@@ -19,6 +13,11 @@ from app.features.manual.nodes.nodes import (
 )
 from langgraph.graph import StateGraph, START, END
 from app.features.manual.utils.types import State
+
+from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, MessagesState, StateGraph
+
 
 def run_manual_chatbot(user_input: str, car_id: int, history: list) -> str:
     """
@@ -86,12 +85,7 @@ def run_manual_chatbot(user_input: str, car_id: int, history: list) -> str:
     }
     res = graph.invoke(state)
 
-    return res['best_answer']
-
-
-from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import START, MessagesState, StateGraph
+    return res['answer']
 
 def test_rag(user_input, session):
     # Define a new graph

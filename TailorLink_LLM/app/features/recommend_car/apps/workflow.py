@@ -4,7 +4,7 @@ from .utils import connect_aws_db, rerank_results
 from .prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
 from .cilent import get_client
 from .agent_state import AgentState
-from recommend_car.apps.database.milvus_connector import client, generate_kobert_embedding
+from app.features.recommend_car.apps.database.milvus_connector import client, generate_kobert_embedding
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.schema import SystemMessage, HumanMessage
 from typing import Sequence
