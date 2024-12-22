@@ -1,5 +1,4 @@
 package com.example.FinalPJ.dto;
-
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,6 +7,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class BoardDTO {
     private Integer board_id;
     private String title;
