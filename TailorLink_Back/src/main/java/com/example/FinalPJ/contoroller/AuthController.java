@@ -6,6 +6,7 @@ import com.example.FinalPJ.dto.response.auth.CheckCertificationResponseDTO;
 import com.example.FinalPJ.dto.response.auth.EmailCertificationResponseDTO;
 import com.example.FinalPJ.dto.response.auth.IdCheckResponseDTO;
 import com.example.FinalPJ.dto.response.auth.SignInResponseDTO;
+import com.example.FinalPJ.repository.UserRepository;
 import com.example.FinalPJ.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,11 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @PostMapping("/id-check")
     public ResponseEntity<? super IdCheckResponseDTO> idCheck(
@@ -59,14 +62,5 @@ public class AuthController {
     ) {
         ResponseEntity<? super SignInResponseDTO> response = authService.signIn(requestbody);
         return response;
-    }
-
-    @GetMapping("/sign-out")
-    public String signOut(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate(); // 세션 무효화
-        }
-        return "redirect:/v1/auth/sign-in";
     }
 }
