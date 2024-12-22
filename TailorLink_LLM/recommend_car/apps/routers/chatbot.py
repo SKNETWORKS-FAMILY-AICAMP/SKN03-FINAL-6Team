@@ -52,9 +52,6 @@ async def chat(chat_request: ChatRequest):
         # 초기 상태 생성
         initial_state: AgentState = {
             "user_input": user_input,
-            "generated_query": None,
-            "db_result": [],
-            "milvus_result": [],
             "final_result": [],
             "response": "",
             "suggested_questions": [],
