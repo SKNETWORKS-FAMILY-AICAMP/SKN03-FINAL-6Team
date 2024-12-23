@@ -2,6 +2,7 @@ import os
 import logging
 import re
 import json
+import re
 from difflib import SequenceMatcher
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
@@ -187,3 +188,21 @@ def parse_milvus_results(search_results):
     print("[DEBUG] Milvus 파싱 결과:", parsed_results)
     return parsed_results
 
+def extract_json_from_text(raw_text):
+    """
+    주어진 텍스트에서 JSON 형식의 데이터를 추출하고 Python 딕셔너리로 반환
+    """
+    try:
+        # 백틱 안에 있는 JSON 배열 추출
+        json_pattern = re.compile(r'```json\n(.*?)\n```', re.DOTALL)
+        json_match = json_pattern.search(raw_text)
+        if json_match:
+            json_data = json_match.group(1)  # 매칭된 JSON 문자열
+            # JSON 문자열을 Python 딕셔너리로 변환
+            return json.loads(json_data)
+        else:
+            print("[ERROR] JSON 형식 데이터를 찾을 수 없습니다.")
+            return None
+    except Exception as e:
+        print(f"[ERROR] JSON 추출 중 오류 발생: {e}")
+        return None

@@ -44,7 +44,7 @@ def build_car_recommendation_workflow():
 
     def generate_query(state: AgentState):
         """
-        사용자 입력에 기반한 SQL 쿼리 실행
+        사용자 입력에 기반한 SQL 쿼리 실행 후 JSON 형식의 결과만 추출
         """
         inputs = state["user_input"]
         db = connect_aws_db()
@@ -56,13 +56,21 @@ def build_car_recommendation_workflow():
             prompt=get_prompt(),
         )
         try:
-            # 모델 호출
+            # SQL 에이전트 호출
             result = agent.invoke(inputs)["output"]
             print(f"[DEBUG] Agent Response: {result}")
 
-            state["db_result"] = result
+            # JSON 형식 데이터 추출
+            json_result = extract_json_from_text(result)
+            if json_result:
+                state["db_result"] = json_result
+                print(f"[DEBUG] db result: {json_result}")
+            else:
+                state["db_result"] = None
+                print("[ERROR] JSON 형식의 데이터를 찾을 수 없습니다.")
         except Exception as e:
             print(f"[ERROR] 쿼리 생성 실패: {e}")
+            state["db_result"] = None
 
         return state
 
@@ -73,14 +81,15 @@ def build_car_recommendation_workflow():
             search_results = client.search(
                 collection_name="genesis",
                 data=[query_vector],
-                anns_field="vector",
-                search_params={"metric_type": "L2", "params": {"nprobe": 10}},
                 limit=3,
+                output_fields=["car_id", "$meta"]
             )
+            print("[DEBUG] Milvus 검색 결과:", search_results)
             state["milvus_result"] = parse_milvus_results(search_results)
         except Exception as e:
             state["milvus_result"] = []
-            print(f"[ERROR] Milvus 검색 실패: {e}")
+            print(f"[ERROR] Milvus 검색 실패: {str(e)}")
+            print(f"[DEBUG] 예외 args: {e.args}")  # 예외 메시지 상세 정보 출력
         return state
 
     def rerank_node(state: AgentState):
@@ -102,6 +111,7 @@ def build_car_recommendation_workflow():
             return state
 
         try:
+            print("[DEBUG] rerank node 진입")
             ce_rf = CrossEncoderRerankFunction(
                         model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",  
                         device="cpu"
@@ -124,6 +134,7 @@ def build_car_recommendation_workflow():
 
         except Exception as e:
             print(f"[ERROR] Re-ranking 실패: {e}")
+            print(f"[DEBUG] 예외 타입: {type(e)}, 예외 args: {e.args}")
             state["final_result"] = []
 
         return state
@@ -169,7 +180,8 @@ def build_car_recommendation_workflow():
         top_car = final_results[0]
         features = top_car.get("metadata", "특징 정보 없음")
         # 응답 메시지 생성
-        state["response"] = f"추천 차량:\n- {features["car_name"]} (특징: {features})"
+        car_name = features["car_name"]
+        state["response"] = f"추천 차량:\n- {car_name} (특징: {features})"
         return state
 
     def route_based_on_response(state: AgentState) -> Sequence[str]:
