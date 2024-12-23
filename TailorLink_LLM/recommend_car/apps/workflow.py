@@ -117,10 +117,15 @@ def build_car_recommendation_workflow():
                         device="cpu"
             )
 
-            db_text = f"DB 결과: {db_results[0].get('car_name', '정보 없음')}" if db_results else "DB 결과 없음"
+            db_text = (
+                f"차량 ID: {db_results[0]['car_id']} , 차량 Name: {db_results[0]['car_name']}, 차량 Image: {db_results[0]['car_image']}" if db_results and isinstance(db_results[0], dict) else "DB 결과 없음"
+            )
 
             # Milvus 결과를 문장으로 변환 
-            milvus_text = f"차량 ID {milvus_results.get('car_id')}, {milvus_results.get('metadata')}"
+            milvus_text = (
+                f"차량 ID {milvus_results[0]['car_id']}, {milvus_results[0].get('metadata', '정보 없음')}"
+                if milvus_results and isinstance(milvus_results[0], dict) else "Milvus 결과 없음"
+            )
 
             # Reranking 수행
             reranked_results = ce_rf(
