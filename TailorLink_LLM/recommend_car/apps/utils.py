@@ -164,12 +164,15 @@ def parse_milvus_results(search_results):
     """
     Milvus 검색 결과를 파싱하여 사용할 수 있는 형태로 변환합니다.
     """
-    parsed_results = []
     try:
+        # 검색 결과를 문자열로 출력 (디버깅용)
+        print("[Debug 확인] " + str(search_results))
+
+        parsed_results = []
         for result_list in search_results:
             for hit in result_list:
-                car_id = hit.get("car_id")
-                metadata = hit.get("Dynamic Fields")
+                metadata = hit.get("entity")
+                car_id = metadata.get("car_id")
 
                 # 유효성 검증: car_id와 metadata가 None이면 추가하지 않음
                 if car_id is not None or metadata is not None:
@@ -177,7 +180,7 @@ def parse_milvus_results(search_results):
                         "car_id": car_id,
                         "metadata": metadata
                     })
-        
+
         # 결과가 비어 있는 경우 디버깅 메시지 출력
         if not parsed_results:
             print("[DEBUG] Milvus 검색 결과가 유효하지 않습니다. 모든 항목이 None입니다.")

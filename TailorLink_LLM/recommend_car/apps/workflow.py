@@ -1,9 +1,9 @@
 from langgraph.graph import StateGraph, END, START
 from langchain_community.agent_toolkits import create_sql_agent
-from .utils import connect_aws_db, parse_milvus_results
-from .prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
-from .cilent import get_client
-from .agent_state import AgentState
+from recommend_car.apps.utils import connect_aws_db, parse_milvus_results, extract_json_from_text
+from recommend_car.apps.prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
+from recommend_car.apps.cilent import get_client
+from recommend_car.apps.agent_state import AgentState
 from recommend_car.apps.database.milvus_connector import client, generate_kobert_embedding
 from langgraph.checkpoint.memory import MemorySaver
 from langchain.schema import SystemMessage, HumanMessage
@@ -34,7 +34,7 @@ def build_car_recommendation_workflow():
         # LLM 호출
         client = get_client()
         try:
-            response = client([system_prompt, human_message])  # 메시지 배열로 전달
+            response = client.invoke([system_prompt, human_message])
             state["response"] = response.content.strip()
         except Exception as e:
             state["response"] = "모델 호출에 실패했습니다. 다시 시도해주세요."
@@ -104,7 +104,7 @@ def build_car_recommendation_workflow():
 
         if not is_valid:
             print(f"[ERROR] Re-ranking 불가: {result_status}")
-            state["final_result"] = []
+            state["final_result"] = {}
             state["response"] = (
                 f"{result_status}. 죄송합니다. 조건을 수정하거나 추가 정보를 제공해 주세요."
             )
@@ -113,7 +113,7 @@ def build_car_recommendation_workflow():
         try:
             print("[DEBUG] rerank node 진입")
             ce_rf = CrossEncoderRerankFunction(
-                        model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",  
+                        model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",
                         device="cpu"
             )
 
@@ -121,7 +121,8 @@ def build_car_recommendation_workflow():
                 f"차량 ID: {db_results[0]['car_id']} , 차량 Name: {db_results[0]['car_name']}, 차량 Image: {db_results[0]['car_image']}" if db_results and isinstance(db_results[0], dict) else "DB 결과 없음"
             )
 
-            # Milvus 결과를 문장으로 변환 
+            # Milvus 결과를 문장으로 변환
+            print("[DEBUG] milvus_text 진입")
             milvus_text = (
                 f"차량 ID {milvus_results[0]['car_id']}, {milvus_results[0].get('metadata', '정보 없음')}"
                 if milvus_results and isinstance(milvus_results[0], dict) else "Milvus 결과 없음"
@@ -134,8 +135,10 @@ def build_car_recommendation_workflow():
                 top_k=1
             )
             # Re-ranking 결과를 state에 저장
-            state["final_result"] = reranked_results
-            print("[DEBUG] Re-ranking 결과:", reranked_results)  
+            print("[DEBUG] Raw text:", reranked_results[0].text)  # 첫 번째 결과의 text 속성 접근
+            feature = json.loads(reranked_results[0].text)  # 첫 번째 결과의 text를 JSON으로 파싱
+            state["final_result"] = feature
+            print("[DEBUG] Re-ranking 결과:", feature)
 
         except Exception as e:
             print(f"[ERROR] Re-ranking 실패: {e}")
@@ -148,14 +151,14 @@ def build_car_recommendation_workflow():
         """
         예상 질문 생성 노드
         """
-        final_results = state.get("final_result", [])
-        if not final_results:
+        final_result = state.get("final_result", {})
+        if not final_result:
             state["suggested_questions"] = []
             return state
 
         # 첫 번째 결과에서 car_name과 features 가져오기
-        top_result = final_results[0]
-        features = top_result.get("metadata", "").strip()
+        top_result = final_result
+        features = top_result.get("car_info", "").strip()
 
         # 예상 질문을 생성하는 LLM 프롬프트 작성
         prompt = get_suggest_question_prompt(features)
@@ -177,13 +180,13 @@ def build_car_recommendation_workflow():
         """
         최종 응답 생성: 최상위 차량 하나만 반환
         """
-        final_results = state.get("final_result", [])
-        if not final_results:
+        final_result = state.get("final_result", {})
+        if not final_result:
             return state
 
         # 상위 한 개의 차량만 사용
-        top_car = final_results[0]
-        features = top_car.get("metadata", "특징 정보 없음")
+        top_car = final_result
+        features = top_car.get("car_info", "특징 정보 없음")
         # 응답 메시지 생성
         car_name = features["car_name"]
         state["response"] = f"추천 차량:\n- {car_name} (특징: {features})"
@@ -233,7 +236,7 @@ def build_car_recommendation_workflow():
         # 결과 있음
         return "결과 있음", True
 
-        
+
     def route_based_on_results(state: AgentState) -> Sequence[str]:
         """
         DB 및 Milvus 결과 유무에 따라 경로를 결정.
@@ -256,7 +259,7 @@ def build_car_recommendation_workflow():
         return ["rerank_node"]
 
 
-        
+
     # Workflow 정의
     workflow = StateGraph(state_schema=AgentState)
 
@@ -265,7 +268,7 @@ def build_car_recommendation_workflow():
     workflow.add_node("generate_query", generate_query)
     workflow.add_node("milvus_search", milvus_search)
     workflow.add_node("rerank_node", rerank_node)
-    workflow.add_node("suggest_question", suggest_question_node)  
+    workflow.add_node("suggest_question", suggest_question_node)
     workflow.add_node("generate_response", generate_response)
 
     # 노드 연결
@@ -278,7 +281,7 @@ def build_car_recommendation_workflow():
         "milvus_search",
         route_based_on_results,
         ["rerank_node", "generate_response"],  # 조건에 따라 rerank_node 또는 generate_response로 이동
-    )   
+    )
     workflow.add_edge("rerank_node", "suggest_question")  # Re-ranking 후 예상 질문 생성
     workflow.add_edge("suggest_question", "generate_response")  # 예상 질문 생성 후 응답 생성
     workflow.add_edge("generate_response", END)
