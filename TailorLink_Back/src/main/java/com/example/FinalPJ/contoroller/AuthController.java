@@ -63,4 +63,13 @@ public class AuthController {
         ResponseEntity<? super SignInResponseDTO> response = authService.signIn(requestbody);
         return response;
     }
+
+    @GetMapping("/sign-out")
+    public String signOut(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate(); // 세션 무효화
+        }
+        return "redirect:/v1/auth/sign-in";
+    }
 }
