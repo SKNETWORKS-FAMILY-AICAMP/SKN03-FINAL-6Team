@@ -1,0 +1,35 @@
+project_root/
+│
+├── documents/              # 문서들 모음
+│
+├── evaluation/             # 평가 함수
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── evaluation.py       # 평가 함수 ( 아직 사용 X)
+│
+├── models/
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── embeddings.py       # 문서 임베딩 저장
+│   ├── model.py            # LLM Model
+│   ├── prompt_templates.py # 프롬프트 템프릿
+│   └── reranker.py         # reranker 모델
+│
+├── nodes/
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── nodes.py            # RAG node 모음
+│   ├── rag_pipeline.py     # RAG 시스템의 주요 파이프라인 로직
+│
+├── router/
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── chatbot.py          # fastapi 라우터
+│
+├── tools/
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── milvus_search.py    # Milvus 검색 함수
+│   ├── tools.py            # RAG 도구 모음
+│
+├── utils/
+│   ├── __init__.py         # 패키지 초기화 파일
+│   ├── enums.py            # enum
+│   ├── pdf_loader.py       # pdf 로더 함수
+│   ├── preprocess.py       # 문서 전처리 함수
+│   ├── types.py            # graph에 사용될 state
