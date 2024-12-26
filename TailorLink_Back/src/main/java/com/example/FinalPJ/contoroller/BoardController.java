@@ -76,7 +76,7 @@ public class BoardController {
         if (bindingResult.hasFieldErrors("content")) {
             return BoardResponseDTO.contentSizeFail();
         }
-        if (bindingResult.hasFieldErrors("author")) {
+        if (bindingResult.hasFieldErrors("writer")) {
             return BoardResponseDTO.writerSizeFail();
         }
         return ResponseEntity.badRequest().build();
