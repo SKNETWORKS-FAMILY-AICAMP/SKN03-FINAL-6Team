@@ -31,7 +31,7 @@ app.include_router(manual_bot.manual_qa_router, prefix="/api/manuals", tags=["ma
 async def root():
     return {"message": "Car Chatbot API is running."}
 
-@app.get("/_stcore/health")
+@app.get("/_stcore/health", status_code=200)
 async def health_check():
     return {"status": "ok"}
 
