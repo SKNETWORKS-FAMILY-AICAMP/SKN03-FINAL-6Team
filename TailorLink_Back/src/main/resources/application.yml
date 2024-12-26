@@ -1,3 +1,4 @@
+---
 spring:
   datasource:
     url: jdbc:mysql://my-database.cbuom6aeon9v.ap-northeast-2.rds.amazonaws.com:3306/mydatabase?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
@@ -8,3 +9,59 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Seoul
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  web:
+    resources:
+      add-mappings: true
+
+  logging:
+    level:
+      org.springframework.security: INFO
+
+  thymeleaf:
+    cache: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  # Gmail 설정
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: tailorlink06@gmail.com
+    password: indx znxi gbvb wbqa
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # Kakao OAuth2 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: f14e5e1de557b5b043b13006ad7cae30
+            client-secret: C4tcGbX2n7nn92YoIjBXsOHDEFuscD62
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - profile_nickname
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# JWT Secret Key
+secret-key: ThisStatementIsJwtSecretKeyDoNotUseThisStatement
