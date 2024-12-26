@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END, START
 from langchain_community.agent_toolkits import create_sql_agent
-from app.features.recommend_car.apps.utils import connect_aws_db, parse_milvus_results
+from app.features.recommend_car.apps.utils import connect_aws_db, parse_milvus_results, extract_json_from_text
 from app.features.recommend_car.apps.prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
 from app.features.recommend_car.apps.cilent import get_client
 from app.features.recommend_car.apps.agent_state import AgentState
@@ -34,7 +34,7 @@ def build_car_recommendation_workflow():
         # LLM 호출
         client = get_client()
         try:
-            response = client([system_prompt, human_message])  # 메시지 배열로 전달
+            response = client.invoke([system_prompt, human_message])
             state["response"] = response.content.strip()
         except Exception as e:
             state["response"] = "모델 호출에 실패했습니다. 다시 시도해주세요."
@@ -44,7 +44,7 @@ def build_car_recommendation_workflow():
 
     def generate_query(state: AgentState):
         """
-        사용자 입력에 기반한 SQL 쿼리 실행
+        사용자 입력에 기반한 SQL 쿼리 실행 후 JSON 형식의 결과만 추출
         """
         inputs = state["user_input"]
         db = connect_aws_db()
@@ -56,13 +56,21 @@ def build_car_recommendation_workflow():
             prompt=get_prompt(),
         )
         try:
-            # 모델 호출
+            # SQL 에이전트 호출
             result = agent.invoke(inputs)["output"]
             print(f"[DEBUG] Agent Response: {result}")
 
-            state["db_result"] = result
+            # JSON 형식 데이터 추출
+            json_result = extract_json_from_text(result)
+            if json_result:
+                state["db_result"] = json_result
+                print(f"[DEBUG] db result: {json_result}")
+            else:
+                state["db_result"] = None
+                print("[ERROR] JSON 형식의 데이터를 찾을 수 없습니다.")
         except Exception as e:
             print(f"[ERROR] 쿼리 생성 실패: {e}")
+            state["db_result"] = None
 
         return state
 
@@ -73,14 +81,15 @@ def build_car_recommendation_workflow():
             search_results = client.search(
                 collection_name="genesis",
                 data=[query_vector],
-                anns_field="vector",
-                search_params={"metric_type": "L2", "params": {"nprobe": 10}},
                 limit=3,
+                output_fields=["car_id", "$meta"]
             )
+            print("[DEBUG] Milvus 검색 결과:", search_results)
             state["milvus_result"] = parse_milvus_results(search_results)
         except Exception as e:
             state["milvus_result"] = []
-            print(f"[ERROR] Milvus 검색 실패: {e}")
+            print(f"[ERROR] Milvus 검색 실패: {str(e)}")
+            print(f"[DEBUG] 예외 args: {e.args}")  # 예외 메시지 상세 정보 출력
         return state
 
     def rerank_node(state: AgentState):
@@ -95,22 +104,29 @@ def build_car_recommendation_workflow():
 
         if not is_valid:
             print(f"[ERROR] Re-ranking 불가: {result_status}")
-            state["final_result"] = []
+            state["final_result"] = {}
             state["response"] = (
                 f"{result_status}. 죄송합니다. 조건을 수정하거나 추가 정보를 제공해 주세요."
             )
             return state
 
         try:
+            print("[DEBUG] rerank node 진입")
             ce_rf = CrossEncoderRerankFunction(
-                        model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",  
+                        model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",
                         device="cpu"
             )
 
-            db_text = f"DB 결과: {db_results[0].get('car_name', '정보 없음')}" if db_results else "DB 결과 없음"
+            db_text = (
+                f"차량 ID: {db_results[0]['car_id']} , 차량 Name: {db_results[0]['car_name']}, 차량 Image: {db_results[0]['car_image']}" if db_results and isinstance(db_results[0], dict) else "DB 결과 없음"
+            )
 
-            # Milvus 결과를 문장으로 변환 
-            milvus_text = f"차량 ID {milvus_results.get('car_id')}, {milvus_results.get('metadata')}"
+            # Milvus 결과를 문장으로 변환
+            print("[DEBUG] milvus_text 진입")
+            milvus_text = (
+                f"차량 ID {milvus_results[0]['car_id']}, {milvus_results[0].get('metadata', '정보 없음')}"
+                if milvus_results and isinstance(milvus_results[0], dict) else "Milvus 결과 없음"
+            )
 
             # Reranking 수행
             reranked_results = ce_rf(
@@ -119,11 +135,14 @@ def build_car_recommendation_workflow():
                 top_k=1
             )
             # Re-ranking 결과를 state에 저장
-            state["final_result"] = reranked_results
-            print("[DEBUG] Re-ranking 결과:", reranked_results)  
+            print("[DEBUG] Raw text:", reranked_results[0].text)  # 첫 번째 결과의 text 속성 접근
+            feature = json.loads(reranked_results[0].text)  # 첫 번째 결과의 text를 JSON으로 파싱
+            state["final_result"] = feature
+            print("[DEBUG] Re-ranking 결과:", feature)
 
         except Exception as e:
             print(f"[ERROR] Re-ranking 실패: {e}")
+            print(f"[DEBUG] 예외 타입: {type(e)}, 예외 args: {e.args}")
             state["final_result"] = []
 
         return state
@@ -132,14 +151,14 @@ def build_car_recommendation_workflow():
         """
         예상 질문 생성 노드
         """
-        final_results = state.get("final_result", [])
-        if not final_results:
+        final_result = state.get("final_result", {})
+        if not final_result:
             state["suggested_questions"] = []
             return state
 
         # 첫 번째 결과에서 car_name과 features 가져오기
-        top_result = final_results[0]
-        features = top_result.get("metadata", "").strip()
+        top_result = final_result
+        features = top_result.get("car_info", "").strip()
 
         # 예상 질문을 생성하는 LLM 프롬프트 작성
         prompt = get_suggest_question_prompt(features)
@@ -161,15 +180,16 @@ def build_car_recommendation_workflow():
         """
         최종 응답 생성: 최상위 차량 하나만 반환
         """
-        final_results = state.get("final_result", [])
-        if not final_results:
+        final_result = state.get("final_result", {})
+        if not final_result:
             return state
 
         # 상위 한 개의 차량만 사용
-        top_car = final_results[0]
-        features = top_car.get("metadata", "특징 정보 없음")
+        top_car = final_result
+        features = top_car.get("car_info", "특징 정보 없음")
         # 응답 메시지 생성
-        state["response"] = f"추천 차량:\n- {features["car_name"]} (특징: {features})"
+        car_name = features["car_name"]
+        state["response"] = f"추천 차량:\n- {car_name} (특징: {features})"
         return state
 
     def route_based_on_response(state: AgentState) -> Sequence[str]:
@@ -216,7 +236,7 @@ def build_car_recommendation_workflow():
         # 결과 있음
         return "결과 있음", True
 
-        
+
     def route_based_on_results(state: AgentState) -> Sequence[str]:
         """
         DB 및 Milvus 결과 유무에 따라 경로를 결정.
@@ -239,7 +259,7 @@ def build_car_recommendation_workflow():
         return ["rerank_node"]
 
 
-        
+
     # Workflow 정의
     workflow = StateGraph(state_schema=AgentState)
 
@@ -248,7 +268,7 @@ def build_car_recommendation_workflow():
     workflow.add_node("generate_query", generate_query)
     workflow.add_node("milvus_search", milvus_search)
     workflow.add_node("rerank_node", rerank_node)
-    workflow.add_node("suggest_question", suggest_question_node)  
+    workflow.add_node("suggest_question", suggest_question_node)
     workflow.add_node("generate_response", generate_response)
 
     # 노드 연결
@@ -261,7 +281,7 @@ def build_car_recommendation_workflow():
         "milvus_search",
         route_based_on_results,
         ["rerank_node", "generate_response"],  # 조건에 따라 rerank_node 또는 generate_response로 이동
-    )   
+    )
     workflow.add_edge("rerank_node", "suggest_question")  # Re-ranking 후 예상 질문 생성
     workflow.add_edge("suggest_question", "generate_response")  # 예상 질문 생성 후 응답 생성
     workflow.add_edge("generate_response", END)
