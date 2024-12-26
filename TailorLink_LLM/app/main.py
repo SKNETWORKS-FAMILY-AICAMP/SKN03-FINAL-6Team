@@ -4,6 +4,8 @@ from app.features.recommend_car.apps.routers import chatbot as recommend_bot
 from app.features.manual.router import chatbot as manual_bot
 from app.core.lifespan import lifespan
 from app.core.config import settings
+import uvicorn
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description=settings.PROJECT_DESCRIPTION,
@@ -29,10 +31,9 @@ app.include_router(manual_bot.manual_qa_router, prefix="/api/manuals", tags=["ma
 async def root():
     return {"message": "Car Chatbot API is running."}
 
-@app.get("/health")
+@app.get("/_stcore/health", status_code=200)
 async def health_check():
     return {"status": "ok"}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

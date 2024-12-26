@@ -24,13 +24,12 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt
 # 코드 복사
 COPY ./app /app/app
 
-
 ENV PYTHONPATH=/app
 
 # 실행 포트 정의 
 EXPOSE 8000
 # 컨테이너 실행 유무 확인 
-HEALTHCHECK CMD curl --fail http://localhost:8000/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:8000/_stcore/health || exit 1
 
 ENTRYPOINT ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
