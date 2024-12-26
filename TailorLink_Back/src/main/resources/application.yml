@@ -10,11 +10,6 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Seoul
 
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
   web:
     resources:
       add-mappings: true
@@ -65,3 +60,12 @@ spring:
 
 # JWT Secret Key
 secret-key: ThisStatementIsJwtSecretKeyDoNotUseThisStatement
+
+management:
+  endpoint:
+    health:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
