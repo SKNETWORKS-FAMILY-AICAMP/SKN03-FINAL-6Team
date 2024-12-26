@@ -50,7 +50,7 @@ public class WebSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/", "/v1/auth/**", "/auth2/**", "/v1/board/**","/v1/user/**").permitAll()
+                        .requestMatchers("/", "/v1/auth/**", "/auth2/**", "/v1/board/**","/v1/user/**", "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
