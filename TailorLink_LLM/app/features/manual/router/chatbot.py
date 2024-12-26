@@ -12,12 +12,11 @@ from fastapi.responses import StreamingResponse
 from app.core.logger import logger
 from app.utils.session_manager import generate_session_id, initialize_session, update_session_access,cleanup_sessions
 
-from app.database.chat_history import ChatHistoryManager, Session
+from app.database.chat_history import ChatHistoryManager
 from langchain_core.messages import HumanMessage, AIMessage
 
-# 세션 및 매니저 초기화
-session = Session()
-chat_history_manager = ChatHistoryManager(session)
+# ChatHistoryManager 인스턴스 생성
+chat_history_manager = ChatHistoryManager()
 
 from app.features.manual.nodes.rag_pipeline import run_manual_chatbot, test_rag
 manual_qa_router = APIRouter()
@@ -113,3 +112,19 @@ async def chat(chat_request: ChatRequest):
 #     return StreamingResponse(mock_stream_openai_response(question), media_type="text/event-stream")
 
 
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import os
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+@manual_qa_router.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    if file.content_type != "application/pdf":
+        return JSONResponse(content={"message": "Only PDF files are allowed."}, status_code=400)
+
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
+    return {"message": f"File '{file.filename}' uploaded successfully."}

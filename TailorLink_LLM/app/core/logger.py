@@ -26,9 +26,9 @@ def setup_logger(name: str = "fastapi_project", level: int = logging.INFO) -> lo
 
     # 파일 핸들러 추가 (RotatingFileHandler)
     file_handler = RotatingFileHandler(
-        "app.log",        # 로그 파일 이름
+        "tailorlink.log",        # 로그 파일 이름
         maxBytes=10_000,  # 최대 파일 크기 (10KB)
-        backupCount=5     # 백업 파일 개수 (최대 5개)
+        backupCount=1     # 백업 파일 개수 (최대 5개)
     )
     file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
     logger.addHandler(file_handler)

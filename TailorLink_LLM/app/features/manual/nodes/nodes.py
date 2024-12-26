@@ -9,6 +9,7 @@ from app.features.manual.models.schemas import QuestionList, GradeHallucinations
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from app.features.manual.tools.tools import search_milvus
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from app.features.manual.tools.tools import get_genesis_model
 
 from app.core.logger import logger
 
@@ -43,16 +44,17 @@ def genesis_check_and_query_split(state: State) -> State:
 
     prompt = create_check_genesis_and_split_prompt()
     llm = create_openai_model('gpt-4o-mini')
-    parser = JsonOutputParser(pydantic_object=QuestionList)
-    prompt = prompt.partial(format_instructions=parser.get_format_instructions())
+    structured_llm_grader = llm.with_structured_output(QuestionList)
 
-    chain = prompt | llm | parser
+    chain = prompt | structured_llm_grader
 
-    response = chain.invoke({'question': state['message']})
+    car_list = get_genesis_model()
 
-    state['questions'] = response['question_list']
-    state['answer'] = response['print']
-    state['is_stop'] = not response['vailid_question']
+    response = chain.invoke({"car_model": car_list, 'question': state['message']})
+
+    state['questions'] = response.question_list
+    state['answer'] = response.print
+    state['is_stop'] = not response.vailid_question
 
     return state
 

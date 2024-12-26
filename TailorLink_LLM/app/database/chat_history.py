@@ -1,13 +1,10 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, func
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, Integer, String, Text, DateTime, func
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
-from sympy.physics.units import force
+from app.database.mysql import Base, get_db_session
+from sqlalchemy.exc import SQLAlchemyError
+from pymysql import MySQLError
 
-from app.core.config import settings
-
-# SQLAlchemy 설정
-Base = declarative_base()
-
+# 데이터베이스 모델 정의
 class MessageModel(Base):
     """SQL 대화 기록 모델"""
     __tablename__ = "chat_history"
@@ -18,40 +15,39 @@ class MessageModel(Base):
     content = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-# SQLAlchemy 세션 생성
-connection_string = f"mysql+pymysql://{settings.DATABASE_USER}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_URL}:3306/{settings.DATABASE_NAME}"
-engine = create_engine(connection_string)  # SQLite 사용
-Session = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
-
+# 대화 기록 관리 클래스
 class ChatHistoryManager:
     """대화 기록 관리 클래스"""
-    def __init__(self, session):
-        self.session = session
-
-    def save_message(self, session_id: str, user_id, message: BaseMessage, message_type: str):
-        """대화 메시지를 저장"""
-        message_record = MessageModel(
-            session_id=session_id,
-            user_id=user_id,
-            message_type=message_type,
-            content=message.content
-        )
-        self.session.add(message_record)
-        self.session.commit()
+    def save_message(self, session_id: str, user_id: str, message: BaseMessage, message_type: str):
+        """대화 메시지 저장"""
+        with get_db_session() as session:
+            try:
+                message_record = MessageModel(
+                    session_id=session_id,
+                    user_id=user_id,
+                    message_type=message_type,
+                    content=message.content,
+                )
+                session.add(message_record)
+                session.commit()
+            except SQLAlchemyError as e:
+                raise RuntimeError(f"Failed to save message: {e}")
 
     def load_history(self, session_id: str):
         """대화 기록 불러오기"""
-        messages = (
-            self.session.query(MessageModel)
-            .filter_by(session_id=session_id)
-            .order_by(MessageModel.created_at)
-            .limit(20)  # 최근 20개 가져오기
-            .all()
-        )
-        # 메시지 타입에 따라 HumanMessage 또는 AIMessage로 변환
-        return [
-            HumanMessage(content=msg.content) if msg.message_type == "human"
-            else AIMessage(content=msg.content)
-            for msg in messages
-        ]
+        with get_db_session() as session:
+            try:
+                messages = (
+                    session.query(MessageModel)
+                    .filter_by(session_id=session_id)
+                    .order_by(MessageModel.created_at)
+                    .limit(20)
+                    .all()
+                )
+                return [
+                    HumanMessage(content=msg.content) if msg.message_type == "human"
+                    else AIMessage(content=msg.content)
+                    for msg in messages
+                ]
+            except SQLAlchemyError as e:
+                raise RuntimeError(f"Failed to load history: {e}")

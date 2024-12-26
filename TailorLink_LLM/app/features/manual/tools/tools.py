@@ -3,7 +3,8 @@ from app.features.manual.tools.milvus_search import dense_search, hybrid_search,
 from app.features.manual.models.embedding import generate_query_embeddings
 from app.database.milvus import get_collection
 from app.features.manual.models.reranker import bge_rf
-
+from app.database.mysql import get_db_session
+from app.core.logger import logger
 MILVUS_COLLECTION_NAME = "manual"  # 설정값으로 분리
 
 @tool
@@ -54,3 +55,24 @@ def search_milvus(query_list: list, car_id: int, sparse_weight: float = 0.5, den
         results_list.append(rerank_results)
 
     return results_list
+
+def get_genesis_model():
+    """
+    Retrieve 'car_id' and 'car_name' information from MySQL.
+
+    Returns:
+        list: A list of dictionaries containing 'car_id' and 'car_name'.
+    """
+    try:
+        with get_db_session() as session:
+            # Execute SQL query using SQLAlchemy session
+            result = session.execute("SELECT car_id, car_name FROM car").fetchall()
+
+            # Format results into a dictionary list
+            model_list = [{"car_id": row[0], "car_name": row[1].lower()} for row in result]
+
+        return model_list
+
+    except Exception as e:
+        logger.error(f"Error in get_genesis_model: {e}")
+        raise

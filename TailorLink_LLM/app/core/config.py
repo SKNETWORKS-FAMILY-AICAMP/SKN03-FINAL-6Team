@@ -60,6 +60,13 @@ class Settings(BaseSettings):
         description="Langchain endpoint"
     )
 
+    MILVUS_CHECK_INTERVAL: int = Field(
+        default=30,
+    )
+    SQLALCHEMY_CHECK_INTERVAL: int = Field(
+        default=30,
+    )
+
     # 클래스 초기화 시 os.environ에 값 추가
     def __init__(self, **data):
         super().__init__(**data)
