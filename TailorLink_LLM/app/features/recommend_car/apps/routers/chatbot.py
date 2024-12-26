@@ -88,14 +88,14 @@ async def chat(chat_request: ChatRequest):
         logging.error(f"[ERROR] Chat 요청 처리 중 오류 발생: {e}", exc_info=True)
 
     return ChatResponse(
-        response="사용자 조건에 맞추어 검색해보았을때, 추천할 차량은 G90 BLACK입니다.",
+        response=response,
         session_id=session_id,
         agent=agent_id,
         response_type=response_type,
         page_info={
-            "car_id": "12345",
-            "car_name": "G90 BLACK",
-            "car_image": "https://jasonryu.net/wp-content/uploads/2024/03/2024-genesis-g90-black-01.jpg?w=1920&h=768&crop=1"
+            "car_id":  page_info["car_id"],
+            "car_name": page_info["car_name"],
+            "car_image": page_info["car_image"]
         },
         suggest_question=suggest_question,
         timestamp=timestamp
