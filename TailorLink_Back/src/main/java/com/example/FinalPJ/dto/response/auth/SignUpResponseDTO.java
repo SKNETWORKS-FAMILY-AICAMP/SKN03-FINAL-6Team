@@ -1,4 +1,4 @@
-package com.example.FinalPJ.dto.response;
+package com.example.FinalPJ.dto.response.auth;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.example.FinalPJ.common.ResponseCode;
 import com.example.FinalPJ.common.ResponseMessage;
+import com.example.FinalPJ.dto.response.ResponseDTO;
 
 @Getter
 public class SignUpResponseDTO extends ResponseDTO {
