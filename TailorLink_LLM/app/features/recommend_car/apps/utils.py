@@ -4,9 +4,9 @@ import re
 import json
 import re
 from difflib import SequenceMatcher
+from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from app.features.recommend_car.apps.db import get_connection
-from app.core.config import settings
+from recommend_car.apps.db import get_connection
 
 
 logging.basicConfig(
@@ -30,7 +30,6 @@ def connect_aws_db():
         raise ValueError("데이터베이스 환경 변수를 설정해주세요.")
 
     db_uri = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    logger.info(db_uri)
     db = SQLDatabase.from_uri(db_uri)
 
     return db
