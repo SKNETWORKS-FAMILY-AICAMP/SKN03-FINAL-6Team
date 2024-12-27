@@ -5,8 +5,9 @@ import json
 import re
 from difflib import SequenceMatcher
 from dotenv import load_dotenv
-from langchain_community.utilities import SQLDatabase
+from langchain_community.utilities.sql_database import SQLDatabase
 from recommend_car.apps.db import get_connection
+from sqlalchemy import create_engine
 
 load_dotenv()
 
@@ -29,10 +30,18 @@ def connect_aws_db():
     
     if not all([db_host, db_port, db_user, db_password, db_name]):
         raise ValueError("데이터베이스 환경 변수를 설정해주세요.")
-    
-    db_uri = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    db = SQLDatabase.from_uri(db_uri)
 
+    db_uri = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    db_engine = create_engine(
+        db_uri,
+        pool_pre_ping=True,   # 연결 상태 확인
+        pool_recycle=1800,    # 30분 후 연결 재설정
+        pool_size=10,         # 연결 풀의 기본 연결 수
+        max_overflow=5,       # 추가 연결 허용 수
+        pool_timeout=20,      # 대기 시간
+        echo=True             # SQL 실행 로그 활성화 (디버깅 용도)
+    )
+    db = SQLDatabase(db_engine)
     return db
 
 def calculate_similarity(a, b):
