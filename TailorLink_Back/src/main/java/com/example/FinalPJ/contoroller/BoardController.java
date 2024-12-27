@@ -22,7 +22,7 @@ public class BoardController {
     }
 
     @PostMapping("/write")
-    public ResponseEntity<?> boardWritePro(@RequestBody @Valid BoardRequestDTO dto, BindingResult bindingResult) {
+    public ResponseEntity<?> boardWrite(@RequestBody @Valid BoardRequestDTO dto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return handleValidationErrors(bindingResult); // 유효성 검사 실패 처리
         }
@@ -63,11 +63,6 @@ public class BoardController {
         return ResponseEntity.ok().body("게시물이 성공적으로 수정되었습니다.");
     }
 
-    @GetMapping("/list/sorted")
-    public ResponseEntity<?> boardListSortedByDate() {
-        return ResponseEntity.ok(boardService.boardListSortByDate());
-    }
-
     // 공통 검증 에러 처리 메서드
     private ResponseEntity<?> handleValidationErrors(BindingResult bindingResult) {
         if (bindingResult.hasFieldErrors("title")) {
@@ -76,7 +71,7 @@ public class BoardController {
         if (bindingResult.hasFieldErrors("content")) {
             return BoardResponseDTO.contentSizeFail();
         }
-        if (bindingResult.hasFieldErrors("writer")) {
+        if (bindingResult.hasFieldErrors("author")) {
             return BoardResponseDTO.writerSizeFail();
         }
         return ResponseEntity.badRequest().build();
