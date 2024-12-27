@@ -46,12 +46,6 @@ phases:
       - cat ../imagedefinitions.json
 
 
-      # Update ECS Task Definition with Health Check
-      - echo Updating ECS Task Definition with Health Check...
-      - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition tailorLink-fastapi-task)
-      - echo $TASK_DEFINITION | jq '.taskDefinition.containerDefinitions[0].healthCheck = {"command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"], "interval": 100, "timeout": 100, "retries": 3, "startPeriod": 60}' > task-definition-updated.json
-      - aws ecs register-task-definition --cli-input-json file://task-definition-updated.json
-
 artifacts:
     files: 
       - imagedefinitions.json
