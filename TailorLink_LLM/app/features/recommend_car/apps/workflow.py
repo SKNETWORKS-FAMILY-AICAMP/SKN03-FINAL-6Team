@@ -1,15 +1,17 @@
 from langgraph.graph import StateGraph, END, START
-from langchain_community.agent_toolkits import create_sql_agent
 from app.features.recommend_car.apps.utils import connect_aws_db, parse_milvus_results, extract_json_from_text
 from app.features.recommend_car.apps.prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
 from app.features.recommend_car.apps.cilent import get_client
 from app.features.recommend_car.apps.agent_state import AgentState
 from app.features.recommend_car.apps.database.milvus_connector import client, generate_kobert_embedding
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langgraph.checkpoint.memory import MemorySaver
-from langchain.schema import SystemMessage, HumanMessage
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
+from langgraph.prebuilt import create_react_agent
 from typing import Sequence
 from pymilvus.model.reranker import CrossEncoderRerankFunction
 import json 
+import ast
 
 def build_car_recommendation_workflow():
     # LangGraph MemorySaver 초기화
@@ -48,30 +50,34 @@ def build_car_recommendation_workflow():
         """
         inputs = state["user_input"]
         db = connect_aws_db()
-        agent = create_sql_agent(
-            llm=get_client(),
-            db=db,
-            agent_type="openai-tools",
-            verbose=True,
-            prompt=get_prompt(),
+        toolkit = SQLDatabaseToolkit(db=db, llm=get_client())
+        agent_executor = create_react_agent(
+            get_client(), 
+            toolkit.get_tools(), 
+            state_modifier=get_prompt()
         )
         try:
-            # SQL 에이전트 호출
-            result = agent.invoke(inputs)["output"]
-            print(f"[DEBUG] Agent Response: {result}")
+            events = agent_executor.invoke(
+                {"messages": [("user", inputs)]}
+            )
+            messages = events.get("messages")
+            # 최종 AIMessage의 content 추출
+            final_message = None
+            for message in reversed(messages):
+                if isinstance(message, AIMessage) and message.content:
+                    final_message = message.content
+                    break
 
-            # JSON 형식 데이터 추출
-            json_result = extract_json_from_text(result)
-            if json_result:
-                state["db_result"] = json_result
-                print(f"[DEBUG] db result: {json_result}")
+            # 결과 출력
+            if final_message:
+                result = extract_json_from_text(final_message)
+                print(f"[DEBUG] 추출된 JSON: {result}")
+                state["db_result"] = result
             else:
-                state["db_result"] = None
-                print("[ERROR] JSON 형식의 데이터를 찾을 수 없습니다.")
+                print("AIMessage with content not found.")
         except Exception as e:
             print(f"[ERROR] 쿼리 생성 실패: {e}")
             state["db_result"] = None
-
         return state
 
     def milvus_search(state: AgentState):
@@ -136,7 +142,19 @@ def build_car_recommendation_workflow():
             )
             # Re-ranking 결과를 state에 저장
             print("[DEBUG] Raw text:", reranked_results[0].text)  # 첫 번째 결과의 text 속성 접근
-            feature = json.loads(reranked_results[0].text)  # 첫 번째 결과의 text를 JSON으로 파싱
+            raw_text = reranked_results[0].text
+            data_start = raw_text.find("{")
+            raw_dict_string = raw_text[data_start:]
+            
+            # Python 딕셔너리로 변환
+            parsed_dict = ast.literal_eval(raw_dict_string)
+            
+            # JSON으로 변환 (선택적)
+            feature = json.dumps(parsed_dict, ensure_ascii=False, indent=4)
+            
+            # 결과 출력
+            print("[DEBUG] Python 딕셔너리:", parsed_dict)
+            print("[DEBUG] JSON 데이터:", feature)
             state["final_result"] = feature
             print("[DEBUG] Re-ranking 결과:", feature)
 
