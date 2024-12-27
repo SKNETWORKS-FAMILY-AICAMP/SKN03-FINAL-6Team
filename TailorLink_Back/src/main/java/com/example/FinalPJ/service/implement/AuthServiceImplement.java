@@ -1,15 +1,15 @@
 package com.example.FinalPJ.service.implement;
 
 import com.example.FinalPJ.common.CertificationNumber;
-import com.example.FinalPJ.entity.CertificationEntity;
-import com.example.FinalPJ.entity.UserEntity;
 import com.example.FinalPJ.dto.request.auth.*;
 import com.example.FinalPJ.dto.response.ResponseDTO;
+import com.example.FinalPJ.dto.response.SignUpResponseDTO;
 import com.example.FinalPJ.dto.response.auth.CheckCertificationResponseDTO;
 import com.example.FinalPJ.dto.response.auth.EmailCertificationResponseDTO;
 import com.example.FinalPJ.dto.response.auth.IdCheckResponseDTO;
 import com.example.FinalPJ.dto.response.auth.SignInResponseDTO;
-import com.example.FinalPJ.dto.response.auth.SignUpResponseDTO;
+import com.example.FinalPJ.entity.CertificationEntity;
+import com.example.FinalPJ.entity.UserEntity;
 import com.example.FinalPJ.provider.EmailProvider;
 import com.example.FinalPJ.provider.JwtProvider;
 import com.example.FinalPJ.repository.CertificationRepository;
@@ -137,24 +137,26 @@ public class AuthServiceImplement implements AuthService {
 
     @Override
     public ResponseEntity<? super SignInResponseDTO> signIn(SignInRequestDTO dto) {
-         String token = null;
-         try {
+        String token = null;
+        try {
 
-             String userId = dto.getId();
-             UserEntity userEntity = userRepository.findByUserId(userId);
-             if (userEntity == null) SignInResponseDTO.signInFail();
+            String userId = dto.getId();
+            UserEntity userEntity = userRepository.findByUserId(userId);
+            if (userEntity == null) SignInResponseDTO.signInFail();
 
-             String password = dto.getPassword();
-             String encodedPassword = userEntity.getPassword();
-             boolean isMatched = passwordEncoder.matches(password, encodedPassword);
-             if (!isMatched) return SignInResponseDTO.signInFail();
+            String password = dto.getPassword();
+            String encodedPassword = userEntity.getPassword();
+            boolean isMatched = passwordEncoder.matches(password, encodedPassword);
+            if (!isMatched) return SignInResponseDTO.signInFail();
 
-             token = jwtProvider.create(userId);
+            token = jwtProvider.create(userId);
 
-         } catch (Exception exception) {
-             exception.printStackTrace();
-             return ResponseDTO.databaseError();
-         }
-         return SignInResponseDTO.success(token);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return ResponseDTO.databaseError();
+        }
+        return SignInResponseDTO.success(token);
     }
+
+
 }
