@@ -6,8 +6,8 @@ import re
 from difflib import SequenceMatcher
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from recommend_car.apps.db import get_connection
-
+from app.features.recommend_car.apps.db import get_connection
+from app.core.config import settings
 
 logging.basicConfig(
     level=logging.DEBUG,  
