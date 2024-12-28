@@ -73,7 +73,7 @@ async def chat(chat_request: ChatRequest):
 
         # page_info 할당
         if final_results:
-            top_result = final_results[0]
+            top_result = final_results
             page_info = {
                 "car_id": str(top_result.get("car_id", "")),
                 "car_name": top_result.get("car_name", ""),

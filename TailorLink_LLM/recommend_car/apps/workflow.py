@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END, START
 from recommend_car.apps.utils import connect_aws_db, parse_milvus_results, extract_json_from_text
-from recommend_car.apps.prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt
+from recommend_car.apps.prompt_manager import get_prompt, get_suggest_question_prompt, get_system_prompt, get_suggest_recommend_style_prompt
 from recommend_car.apps.cilent import get_client
 from recommend_car.apps.agent_state import AgentState
 from recommend_car.apps.database.milvus_connector import client, generate_kobert_embedding
@@ -147,13 +147,9 @@ def build_car_recommendation_workflow():
             raw_dict_string = raw_text[data_start:]
             
             # Python 딕셔너리로 변환
-            parsed_dict = ast.literal_eval(raw_dict_string)
-            
-            # JSON으로 변환 (선택적)
-            feature = json.dumps(parsed_dict, ensure_ascii=False, indent=4)
+            feature = ast.literal_eval(raw_dict_string)
             
             # 결과 출력
-            print("[DEBUG] Python 딕셔너리:", parsed_dict)
             print("[DEBUG] JSON 데이터:", feature)
             state["final_result"] = feature
             print("[DEBUG] Re-ranking 결과:", feature)
@@ -176,16 +172,18 @@ def build_car_recommendation_workflow():
 
         # 첫 번째 결과에서 car_name과 features 가져오기
         top_result = final_result
+        car_name = top_result.get("car_name", "").strip()
         features = top_result.get("car_info", "").strip()
 
         # 예상 질문을 생성하는 LLM 프롬프트 작성
-        prompt = get_suggest_question_prompt(features)
+        prompt = get_suggest_question_prompt(car_name, features)
 
         try:
             # LLM 호출 및 예상 질문 생성
             llm_response = get_client().invoke(prompt)
+            response_text = llm_response.content  # 텍스트 내용 추출
             suggested_questions = [
-                line.strip() for line in llm_response.split("\n") if line.strip()
+                line.strip() for line in response_text.split("\n") if line.strip()
             ]
             state["suggested_questions"] = suggested_questions[:3]  # 최대 3개의 질문 저장
         except Exception as e:
@@ -206,8 +204,10 @@ def build_car_recommendation_workflow():
         top_car = final_result
         features = top_car.get("car_info", "특징 정보 없음")
         # 응답 메시지 생성
-        car_name = features["car_name"]
-        state["response"] = f"추천 차량:\n- {car_name} (특징: {features})"
+        car_name = top_car["car_name"]
+        response = get_client().invoke(get_suggest_recommend_style_prompt(car_name, features))
+        response_text = response.content
+        state["response"] = response_text
         return state
 
     def route_based_on_response(state: AgentState) -> Sequence[str]:
