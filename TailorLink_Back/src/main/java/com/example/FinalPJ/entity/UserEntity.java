@@ -42,4 +42,10 @@ public class UserEntity {
         this.type = type;
         this.role = "ROLE_USER";
     }
+
+    public void setUserInfo (String email, String name, String phoneNumber) {
+        this.email = email;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+    }
 }
