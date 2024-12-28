@@ -10,7 +10,6 @@ from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from langgraph.prebuilt import create_react_agent
 from typing import Sequence
 from pymilvus.model.reranker import CrossEncoderRerankFunction
-import json 
 import ast
 
 def build_car_recommendation_workflow():
@@ -36,14 +35,38 @@ def build_car_recommendation_workflow():
         # LLM 호출
         client = get_client()
         try:
+            # 모델 호출
             response = client.invoke([system_prompt, human_message])
-            state["response"] = response.content.strip()
+            full_response = response.content.strip()
+
+            # 응답, 의도, 조건 분리
+            if "응답:" in full_response and "의도:" in full_response and "조건:" in full_response:
+                response_part = full_response.split("의도:")[0].replace("응답:", "").strip()
+                intent_part = full_response.split("의도:")[1].split("조건:")[0].strip()
+                conditions = full_response.split("조건:")[1].strip().split(", ")
+            else:
+                response_part = full_response
+                intent_part = "미확인"
+                conditions = []
+
+            # 상태 업데이트
+            state["response"] = response_part
+            print("응답!!!! :" + response_part)
+            state["intent"] = intent_part
+            state["conditions"] = conditions
+
+            print(f"[DEBUG] Detected intent: {state['intent']}")
+            print(f"[DEBUG] Extracted conditions: {conditions} (Count: {len(conditions)})")
+
         except Exception as e:
             state["response"] = "모델 호출에 실패했습니다. 다시 시도해주세요."
+            state["intent"] = "오류"
+            state["conditions"] = []
             print(f"[ERROR] LLM 호출 실패: {e}")
 
-        return state
+        return state  # 반드시 업데이트된 state를 반환
 
+    
     def generate_query(state: AgentState):
         """
         사용자 입력에 기반한 SQL 쿼리 실행 후 JSON 형식의 결과만 추출
@@ -194,10 +217,29 @@ def build_car_recommendation_workflow():
 
     def generate_response(state: AgentState):
         """
-        최종 응답 생성: 최상위 차량 하나만 반환
+        최종 응답 생성
         """
+        final_result = state.get("final_result", [])
+        intent = state.get("intent", "").lower()
+        conditions = state.get("conditions", [])
+        condition_count = len(conditions)
         final_result = state.get("final_result", {})
         if not final_result:
+            print("[DEBUG] 결과값이 없습니다.")
+
+            # 의도에 따른 분기 처리
+            if "차량 추천" in intent:
+                if condition_count < 2:
+                    state["response"] = (
+                        "추천을 위해 최소 2가지 이상의 조건이 필요합니다. "
+                        "예를 들어, '(본인의 예산범위, 예산)에 해당되는 검은색 suv의 좋은 차량' 같은 요청을 해 주세요!"
+                    )
+                else:
+                    state["response"] = (
+                        "조건에 맞는 차량을 찾지 못했습니다. "
+                        "다른 조건으로 다시 시도해 주세요!"
+                    )
+
             return state
 
         # 상위 한 개의 차량만 사용
@@ -212,29 +254,30 @@ def build_car_recommendation_workflow():
 
     def route_based_on_response(state: AgentState) -> Sequence[str]:
         """
-        모델 응답을 기반으로 경로를 결정.
+        모델 응답 및 입력 의도를 기반으로 경로를 결정.
         """
-        response = state.get("response", "").lower()
+        intent = state.get("intent", "")
+        conditions = state.get("conditions", [])
+        condition_count = len(conditions)
 
-        # 검색 불필요 조건
-        if "제네시스 외의 차량은 추천할 수 없습니다" in response or "조건에 맞는 차량을 찾지 못했습니다" in response:
-            print("[DEBUG] 모델 응답: 검색 불필요")
+        if "차량 추천" in intent:
+            if condition_count >= 2:  # 조건이 2가지 이상인 경우
+                print("[DEBUG] Intent: 차량 추천 (DB 및 Milvus 검색 수행)")
+                return ["generate_query"]
+            else:  # 조건이 1가지 이하인 경우
+                print("[DEBUG] Intent: 차량 추천 (추가 정보 요청 필요)")
+                return ["generate_response"]
+
+        elif "추가 정보 요청" in intent:
+            print("[DEBUG] Intent: 추가 정보 요청")
             return ["generate_response"]
 
-        # 추가 정보 요청
-        elif "추천을 위해 예산" in response or "사용 목적 등을 알려주세요" in response:
-            print("[DEBUG] 모델 응답: 추가 정보 요청")
-            return ["generate_response"]
-
-        # 예외 처리
         else:
-            print("[DEBUG] 모델 응답: 검색 필요")
-            return ["generate_query"]
+            print("[DEBUG] Intent: 기타")
+            return ["generate_response"]
+
 
     def analyze_results(db_results, milvus_results):
-        """
-        DB 및 Milvus 결과를 분석하여 상태를 반환.
-        """
         # DB와 Milvus 결과가 모두 비어 있는 경우
         if not db_results and not milvus_results:
             return "DB와 Milvus 모두 결과 없음", False
@@ -267,16 +310,9 @@ def build_car_recommendation_workflow():
 
         if not is_valid:
             print(f"[DEBUG] {result_status}: generate_response로 이동")
-            state["response"] = (
-                "조건에 맞는 차량을 찾지 못했습니다. "
-                "예산, 차량 종류, 사용 목적 등의 정보를 다시 확인해 주세요."
-            )
             return ["generate_response"]
 
-        print(f"[DEBUG] {result_status}: rerank_node로 이동")
         return ["rerank_node"]
-
-
 
     # Workflow 정의
     workflow = StateGraph(state_schema=AgentState)
@@ -298,7 +334,7 @@ def build_car_recommendation_workflow():
     workflow.add_conditional_edges(
         "milvus_search",
         route_based_on_results,
-        ["rerank_node", "generate_response"],  # 조건에 따라 rerank_node 또는 generate_response로 이동
+        ["rerank_node", "generate_response"], 
     )
     workflow.add_edge("rerank_node", "suggest_question")  # Re-ranking 후 예상 질문 생성
     workflow.add_edge("suggest_question", "generate_response")  # 예상 질문 생성 후 응답 생성
