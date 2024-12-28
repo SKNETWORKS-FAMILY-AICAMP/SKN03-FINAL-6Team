@@ -52,7 +52,7 @@ async def chat(chat_request: ChatRequest):
         # 초기 상태 생성
         initial_state: AgentState = {
             "user_input": user_input,
-            "generated_query": None,
+            "intent": "",
             "db_result": [],
             "milvus_result": [],
             "final_result": [],
@@ -68,7 +68,7 @@ async def chat(chat_request: ChatRequest):
         )
 
         # 결과 처리
-        response = workflow_result["response"]
+        response = workflow_result.get("response", "")
         final_results = workflow_result.get("final_result", [])
 
         # page_info 할당
