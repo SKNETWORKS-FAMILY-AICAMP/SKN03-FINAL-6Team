@@ -4,7 +4,9 @@ from app.features.manual.models.embedding import generate_query_embeddings
 from app.database.milvus import get_collection
 from app.features.manual.models.reranker import bge_rf
 from app.database.mysql import get_db_session
+from sqlalchemy.sql import text
 from app.core.logger import logger
+
 MILVUS_COLLECTION_NAME = "manual"  # 설정값으로 분리
 
 @tool
@@ -66,7 +68,7 @@ def get_genesis_model():
     try:
         with get_db_session() as session:
             # Execute SQL query using SQLAlchemy session
-            result = session.execute("SELECT car_id, car_name FROM car").fetchall()
+            result = session.execute(text("SELECT car_id, car_name FROM car")).fetchall()
 
             # Format results into a dictionary list
             model_list = [{"car_id": row[0], "car_name": row[1].lower()} for row in result]

@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database.milvus import get_milvus_client
-from app.database.mysql import get_db_session
+from app.database.mysql import get_db_session, dispose_and_recreate_engine
 from app.core.logger import logger
 from app.core.config import settings
 from pymilvus import connections
 from sqlalchemy.sql import text
+from sqlalchemy.exc import SQLAlchemyError
 import asyncio
 
 async def monitor_sqlalchemy_connection():
@@ -17,9 +18,16 @@ async def monitor_sqlalchemy_connection():
             with get_db_session() as session:
                 session.execute(text("SELECT 1"))  # 데이터베이스 연결 확인용 간단한 쿼리
                 logger.info("SQLAlchemy connection is healthy.")
-        except Exception as e:
-            logger.error(f"Error monitoring SQLAlchemy connection: {e}")
-        await asyncio.sleep(settings.SQLALCHEMY_CHECK_INTERVAL)  # 주기적 확인 간격
+        except SQLAlchemyError as e:
+            logger.error(f"SQLAlchemy connection error detected: {e}")
+            try:
+                dispose_and_recreate_engine()  # 재연결 처리
+            except Exception as reconnect_error:
+                logger.error(f"Failed to reconnect SQLAlchemy: {reconnect_error}")
+        except Exception as general_error:
+            logger.error(f"Unexpected error in connection monitoring: {general_error}")
+        finally:
+            await asyncio.sleep(settings.SQLALCHEMY_CHECK_INTERVAL)  # 주기적 확인 간격
 
 async def monitor_milvus_connection():
     """
