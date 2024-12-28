@@ -10,6 +10,9 @@ public interface ResponseMessage {
     String MAIL_FAIL = "Mail Send Failed";
     String BAD_REQUEST = "Bad Request";
 
+    String NOT_EXISTED_USER = "Not Existed User";
+    String DUPLICATE_EMAIL = "Duplicate Email";
+
     String TITLE_SIZE_FAIL = "Title must be between 1 and 30 characters.";
     String CONTENT_SIZE_FAIL = "Content must be at least 10 characters and no more than 300 characters.";
     String WRITER_SIZE_FAIL = "Writer must be at least 1 character.";
