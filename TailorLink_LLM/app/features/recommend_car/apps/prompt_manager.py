@@ -63,6 +63,15 @@ def get_prompt():
    final_prompt = template_prompt.format()
    return final_prompt
 
+
+def get_suggest_recommend_style_prompt(car_name, features):
+   return f"""
+   사용자가 다음과 같은 차량을 추천받았습니다:
+   차량명: {car_name}
+   특징: {features}
+   이 추천 결과를 포함하여 잘 정리되어있고 간결하고 친근하게 작성해주세요
+"""
+
 def get_suggest_question_prompt(car_name, features):
    """
    예상 질문 생성 프롬프트 템플릿
@@ -74,6 +83,9 @@ def get_suggest_question_prompt(car_name, features):
 
    이 추천 결과를 바탕으로, 사용자가 추가로 물어볼 수 있는 예상 질문 3가지를 생성해 주세요.
    - 질문은 짧고 명확하게 작성해 주세요.
-   - 예: "이 차량의 가격은 얼마인가요?", "유사한 다른 모델이 있나요?"
+   - **형식**
+      1. 예상 질문1
+      2. 예상 질문2
+      3. 예상 질문3
    """
    return prompt.strip()
