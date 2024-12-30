@@ -38,7 +38,7 @@ def run_manual_chatbot(user_input: str, car_id: int, history: list) -> str:
     graph_builder.add_node("calculate_score", calculate_score)
     graph_builder.add_node("query_rewrite", query_rewrite)
 
-    graph_builder.add_edge(START, "generate_history_base_answer")
+    graph_builder.add_edge(START, "genesis_check")
 
     graph_builder.add_edge('query_rewrite', "generate_vector_search_base_answer")
     graph_builder.add_edge('generate_vector_search_base_answer', "grade_hallucination")
@@ -47,13 +47,13 @@ def run_manual_chatbot(user_input: str, car_id: int, history: list) -> str:
     graph_builder.add_conditional_edges(
         'generate_history_base_answer',
         history_base_answer_check_conditional,
-        path_map={"genesis_check": "genesis_check", END: END},
+        path_map={"search": "generate_vector_search_base_answer", END: END},
     )
 
     graph_builder.add_conditional_edges(
         'genesis_check',
         genesis_check_conditional,
-        path_map={"search": "generate_vector_search_base_answer", END: END},
+        path_map={"write": "generate_history_base_answer", END: END},
     )
 
     graph_builder.add_conditional_edges(

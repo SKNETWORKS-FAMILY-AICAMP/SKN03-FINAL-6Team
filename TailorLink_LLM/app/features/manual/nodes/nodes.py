@@ -36,7 +36,7 @@ def history_base_answer_check_conditional(state: State):
     if state['is_stop']:
         return END
     else:
-        return "genesis_check"
+        return "search"
 
 # 제네시스 관련 질문 판단 노드 함수
 def genesis_check_and_query_split(state: State) -> State:
@@ -62,7 +62,7 @@ def genesis_check_conditional(state: State):
     if state['is_stop']:
         return END
     else:
-        return 'search'
+        return 'write'
 
 # 벡터DB 조회 노드 함수
 def generate_vector_search_base_answer(state: State) -> State:
