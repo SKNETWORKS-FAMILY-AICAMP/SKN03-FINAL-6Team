@@ -84,13 +84,14 @@ def build_car_recommendation_workflow():
                 {"messages": [("user", inputs)]}
             )
             messages = events.get("messages")
+            print(f"[DEBUG] MESSAGE: {messages}")
             # 최종 AIMessage의 content 추출
             final_message = None
             for message in reversed(messages):
                 if isinstance(message, AIMessage) and message.content:
                     final_message = message.content
                     break
-
+            print(f"[DEBUG] AIMESSAGE: {final_message}")
             # 결과 출력
             if final_message:
                 result = extract_json_from_text(final_message)
