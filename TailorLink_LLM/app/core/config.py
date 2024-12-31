@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # 프로젝트 기본 설정
     PROJECT_NAME: str = Field(default="TailorLink", description="프로젝트 이름")
     PROJECT_DESCRIPTION: str =  Field(default="OpenAI를 사용한 채팅 봇", description="프로젝트 설명")
-    PROJECT_VERSION: str =  Field(default="1.0.5", description="프로젝트 버전")
+    PROJECT_VERSION: str =  Field(default="1.0.7", description="프로젝트 버전")
     DEBUG: bool = Field(default=False, description="디버그 모드 활성화 여부")
     # 데이터베이스 설정
     DATABASE_URL: str = Field(
