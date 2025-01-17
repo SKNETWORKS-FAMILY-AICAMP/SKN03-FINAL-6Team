@@ -1,118 +1,41 @@
-<<<<<<< HEAD
-# vue-project
+# 프로젝트 이름: AICFN (AI Car For Nature)
 
-This template should help get you started developing with Vue 3 in Vite.
+## 프로젝트 설명
 
-## Recommended IDE Setup
+**AICFN**은 사용자에게 차량 추천, 보험 안내, 차량 가이드 등의 정보를 AI 기반 챗봇을 통해 제공하는 웹 애플리케이션입니다.  
+사용자는 간단한 메시지를 입력하여 차량과 관련된 정보를 얻거나, 맞춤형 추천 및 가이드를 받을 수 있습니다.  
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+---
 
-## Type Support for `.vue` Imports in TS
+## 주요 기능
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+1. **차량 추천**
+   - 사용자 입력에 따라 적합한 차량을 추천합니다.
+   - 추천된 차량의 이미지와 설명을 함께 제공합니다.
 
-## Customize configuration
+2. **보험 안내**
+   - 현대해상 자동차 보험의 보장 범위를 안내합니다.
+   - 특정 질문 입력 시, 마크다운 형식으로 상세 정보를 출력합니다.
+     - **예시 질문**: "현대 해상 자동차 보험의 대인 보장 범위를 알려줘."
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+3. **차량 가이드**
+   - 특정 차량에 대한 상세 가이드를 제공합니다.
+   - 차량 가이드 활성화 시, 지정된 차량 이미지와 함께 정보를 제공합니다.
+   - 이미지를 클릭하면 관련된 페이지로 이동할 수 있습니다.
 
-## Project Setup
+---
 
-```sh
-pnpm install
-```
+## 기술 스택
 
-### Compile and Hot-Reload for Development
+- **프론트엔드**: React, React Markdown
+- **백엔드**: Axios API 통신을 통한 서버와의 연동
+- **스타일링**: CSS
 
-```sh
-pnpm dev
-```
+---
 
-### Type-Check, Compile and Minify for Production
+## 설치 및 실행 방법
 
-```sh
-pnpm build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-pnpm test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
-=======
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
->>>>>>> d3beff2b8b9471a4adc9c63c375d685cb1846103
+1. **리포지토리 클론**
+   ```bash
+   git clone <repository_url>
+   cd <repository_folder>
