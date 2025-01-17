@@ -5,13 +5,7 @@ import './Sidebar.css';
 
 const Sidebar = ({ onWriteClick }) => {
   const location = useLocation();
-
-  // 활성화 판단 함수
-  // 전체게시판: /service/board 경로일 때 활성화
-  // 1:1문의하기: /service/qna 경로일 때 활성화
-  // FAQ: /service/faq 경로일 때 활성화
   const isBoardActive = location.pathname.startsWith("/service/board");
-  const isQnaActive = location.pathname === "/service/qna";
   const isFaqActive = location.pathname === "/service/faq";
 
   return (
@@ -26,14 +20,6 @@ const Sidebar = ({ onWriteClick }) => {
             className={`sidebar-link ${isBoardActive ? "active" : ""}`}
           >
             전체 게시판
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/service/qna"
-            className={`sidebar-link ${isQnaActive ? "active" : ""}`}
-          >
-            1:1 문의하기
           </Link>
         </li>
         <li>

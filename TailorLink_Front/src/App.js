@@ -5,11 +5,12 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home/Home";
 import ChatBot from "./pages/Product/ChatBot";
 import Board from "./pages/Service/Board";
-import Qna from "./pages/Service/Qna";
 import FAQ from "./pages/Service/FAQ";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
-import TextSection from "./pages/Home/components/TextSection";
+import MyPage from "./pages/User/MyPage";
+import FindID from "./pages/Login/FindId";
+import FindPassword from "./pages/Login/FindPassword";
 
 function App() {
   return (
@@ -19,13 +20,14 @@ function App() {
         <div style={styles.pageContent}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/text-section" element={<TextSection />} />
             <Route path="/Product/ChatBot" element={<ChatBot />} />
             <Route path="/service/board" element={<Board />} />
-            <Route path="/service/qna" element={<Qna />} />
             <Route path="/service/faq" element={<FAQ />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/mypage" element={<MyPage />} />
+            <Route path="/FindId" element={<FindID />} />
+            <Route path="/FindPassword" element={<FindPassword />} />
           </Routes>
         </div>
         <Footer />
@@ -39,13 +41,12 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     minHeight: "100vh",
-    backgroundColor: "#f0f8ff",
-    paddingTop: "59px",
   },
   pageContent: {
     flex: 1,
-    width: "100%",
-    boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
+    marginTop: "60px", // 헤더 높이만큼 여백 추가
   },
 };
 

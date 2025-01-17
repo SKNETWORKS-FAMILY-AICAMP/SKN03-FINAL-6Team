@@ -1,0 +1,132 @@
+#sign-in-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    background-color: #E6F0FF;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.sign-in-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 400px; /* 최대 너비 설정 */
+    margin: 0 auto;
+}
+
+.sign-in-box {
+    width: 100%; /* 창 크기에 맞게 너비 조정 */
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.sign-in-logo {
+    width: 100px; /* 로고 크기 설정 */
+    margin: 0 auto 20px auto;
+}
+
+.sign-in-title {
+    color: rgba(64, 64, 64, 1);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.sign-in-content-box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* 간격 축소 */
+    align-items: center;
+}
+
+.sign-in-content-input-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 간격 축소 */
+    text-align: left;
+}
+
+.sign-in-label {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.sign-in-input {
+    width: 100%;
+    padding: 8px; /* 간격 축소 */
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.sign-in-content-button-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 간격 축소 */
+}
+
+.sign-in-button {
+    background-color: #4A90E2;
+    color: #FFF;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sign-in-button:hover {
+    background-color: #357ABD;
+}
+
+.sign-in-content-divider {
+    border-top: 1px solid rgba(238, 238, 238, 1);
+    width: 24px;
+    margin: 10px auto;
+}
+
+.sign-in-content-sns-sign-up-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px; /* 간격 축소 */
+}
+
+.sign-in-content-sns-sign-up-title {
+    color: rgba(138, 146, 166, 1);
+    font-size: 14px; /* 폰트 크기 축소 */
+    font-weight: 400;
+}
+
+.sign-in-content-sns-sign-up-button-box {
+    display: flex;
+    gap: 20px;
+}
+
+.sign-in-social-icon {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.sign-in-help-links {
+    font-size: 0.8rem;
+    margin-top: 10px; /* 여백 축소 */
+}
+
+.sign-in-link {
+    color: #4A90E2;
+    text-decoration: none;
+}
